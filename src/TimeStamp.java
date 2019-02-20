@@ -1,6 +1,8 @@
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Objects;
 
-public class TimeStamp {
+public class TimeStamp implements Serializable {
     private ArrayList<Integer> vector;
 
     public TimeStamp(int size){
@@ -13,8 +15,8 @@ public class TimeStamp {
 
 //    Perform Component Wise Maximum (<2, 1, 1> and <1, 3, 1> should become <2,3,1>)
     public void combineTimeStamps(TimeStamp otherTimeStamp) {
-        for (int i = 0; i < otherTimeStamp.vector.size(); i++) {
-            vector.set(i, otherTimeStamp.vector.get(i) > otherTimeStamp.vector.get(i) ? otherTimeStamp.vector.get(i) : otherTimeStamp.vector.get(i));
+        for (int i = 0; i < vector.size(); i++) {
+            vector.set(i, otherTimeStamp.vector.get(i) > vector.get(i) ? otherTimeStamp.vector.get(i) : vector.get(i));
         }
     }
 
@@ -26,7 +28,7 @@ public class TimeStamp {
      */
     public boolean isBehindTimeStamp(TimeStamp otherTimeStamp) {
         for (int i = 0; i < otherTimeStamp.vector.size(); i++) {
-            if (otherTimeStamp.vector.get(i) > otherTimeStamp.vector.get(i)) return true;
+            if (otherTimeStamp.vector.get(i) > vector.get(i)) return true;
         }
         return false;
     }
@@ -34,5 +36,28 @@ public class TimeStamp {
 
     public void incrementFrontEnd(int index) {
         vector.set(index, vector.get(index) + 1);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TimeStamp timeStamp = (TimeStamp) o;
+        return Objects.equals(vector, timeStamp.vector);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(vector);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("<");
+        for (int i = 0; i < vector.size(); i++) builder.append(vector.get(i) + ",");
+        builder.append(">");
+        return builder.toString();
     }
 }

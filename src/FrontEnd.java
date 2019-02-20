@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class FrontEnd implements FrontEndInterface{
-    private TimeStamp qPrev = new TimeStamp(2);
+    private TimeStamp qPrev = new TimeStamp(PublicInformation.numServers);
 //    private int primaryStub = 0;
     // TODO: 20/02/2019 add primary stub
 
@@ -27,20 +27,35 @@ public class FrontEnd implements FrontEndInterface{
     }
 
     @Override
-    public String processQuery(int serverNumber) throws RemoteException {
+    public String processQuery(int serverNumber){
         ServerInterface stub = locateStub(serverNumber);
         if (stub != null) {
-            return stub.processQuery(qPrev);
+            try {
+                QueryPackage queryResponse = stub.processQuery(qPrev);
+                qPrev = queryResponse.timeStamp;
+                return queryResponse.message;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
-        return "Couldn't Find Server.";
+        return "Couldn't Find Server";
     }
 
     @Override
-    public String processUpdate(int serverNumber) throws RemoteException {
+    public String processUpdate(int serverNumber) {
         ServerInterface stub = locateStub(serverNumber);
         if (stub != null) {
-            return stub.processUpdate(qPrev);
+            try {
+                TimeStamp valueTS = stub.processUpdate(qPrev);
+                if (valueTS.equals(qPrev)) return "No Update Processed";
+                qPrev.combineTimeStamps(valueTS);
+                System.out.println(qPrev);
+                return "Update Processed For Replica Manager " + serverNumber;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
+        System.out.println(qPrev);
         return "Couldn't Find Server";
     }
 

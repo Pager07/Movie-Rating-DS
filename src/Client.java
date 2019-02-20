@@ -17,14 +17,27 @@ public class Client {
             boolean isClientConnected = true;
             Scanner scanner = new Scanner(System.in);
             while (isClientConnected) {
-                System.out.println("What Operations Would You Like To Do: ");
+                System.out.println("What Operations Would You Like To Perform: ");
                 int serverNum;
-                if (scanner.next().toLowerCase().matches("hello")) {
+                String response = scanner.next().toLowerCase();
+                if (response.matches("hello")) {
                     System.out.println("Which Server?");
                     serverNum = Integer.parseInt(scanner.next());
                     System.out.println("Server: " + stub.connectToServer(serverNum));
+                } else if (response.matches("update")){
+                    System.out.println("Which Server?");
+                    serverNum = Integer.parseInt(scanner.next());
+                    System.out.println("Server: " + stub.processUpdate(serverNum));
+                } else if (response.matches("query")) {
+                    System.out.println("Which Server?");
+                    serverNum = Integer.parseInt(scanner.next());
+                    System.out.println("Server: " + stub.processQuery(serverNum));
                 } else {
                     isClientConnected = false;
+                    for (int i = 0; i < PublicInformation.numServers; i++) {
+                        registry.unbind("Server" + i);
+                    }
+                    registry.unbind("FrontEnd");
                 }
             }
         } catch (RemoteException e) {

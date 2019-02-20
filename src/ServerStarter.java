@@ -2,15 +2,14 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-public class Main {
+public class ServerStarter {
 
 //    Creates the number of servers specified by user
     public static void main(String[] args) {
         try {
-            int numServers = 3;
-            for (int i = 0; i < numServers; i++) {
+            for (int i = 0; i < PublicInformation.numServers; i++) {
                 // Create server object
-                Server obj = new Server(i, numServers);
+                Server obj = new Server(i, PublicInformation.numServers);
 
                 // Create remote object stub from server object
                 ServerInterface stub = (ServerInterface) UnicastRemoteObject.exportObject(obj, 0);
