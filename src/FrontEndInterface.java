@@ -6,7 +6,7 @@ public interface FrontEndInterface extends Remote{
 
     public String processQuery() throws RemoteException;
 
-    public String processUpdate() throws RemoteException;
+    public String processUpdate(String updateMessage) throws RemoteException;
 
     public String getServerStatus(int serverNumber) throws RemoteException;
 

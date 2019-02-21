@@ -2,12 +2,13 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.UUID;
 
 
 public class FrontEnd implements FrontEndInterface{
     private TimeStamp qPrev = new TimeStamp(PublicInformation.numServers);
     private int primaryStub = 0;
-    // TODO: 21/02/2019 Get them gossiping (update after x updates) 
+    // TODO: 21/02/2019 Get them gossiping (update after x updates)
     
     public String sayHello(){
         return "Front End Successfully Connected to Client!";
@@ -30,12 +31,11 @@ public class FrontEnd implements FrontEndInterface{
     }
 
     @Override
-    public String processUpdate() {
+    public String processUpdate(String updateMessage) {
         ServerInterface stub = locateStub(primaryStub);
         if (stub != null) {
             try {
-                TimeStamp valueTS = stub.processUpdate(qPrev);
-                if (valueTS.equals(qPrev)) return "No Update Processed";
+                TimeStamp valueTS = stub.processUpdate(qPrev, updateMessage, UUID.randomUUID().toString());
                 qPrev.combineTimeStamps(valueTS);
                 return "Update Processed For Replica Manager " + primaryStub;
             } catch (RemoteException e) {

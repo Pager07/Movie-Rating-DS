@@ -21,7 +21,8 @@ public class Client {
                 System.out.println("What Operations Would You Like To Perform: ");
                 String response = scanner.next().toLowerCase();
                 if (response.matches("update")){
-                    System.out.println("Server: " + stub.processUpdate());
+                    System.out.println("Update: ");
+                    System.out.println("Server: " + stub.processUpdate(scanner.next()));
                 } else if (response.matches("query")) {
                     System.out.println("Server: " + stub.processQuery());
                 } else if (response.matches("getstatus")) {
@@ -49,7 +50,8 @@ public class Client {
                     stub.setPrimaryServer(serverNum);
                 }   else {
                     isClientConnected = false;
-                    for (int i = 0; i < registry.list().length; i++) {
+                    int length = registry.list().length - 1;
+                    for (int i = 0; i < length; i++) {
                         registry.unbind("Server" + i);
                     }
                     registry.unbind("FrontEnd");

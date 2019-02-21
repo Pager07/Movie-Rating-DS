@@ -14,24 +14,29 @@ public class Server implements ServerInterface{
     public Server(int number, int numServers){
         this.number = number;
         valueTS = new TimeStamp(numServers);
+        replicaTS = new TimeStamp(numServers);
         updateManager = new UpdateManager(number);
     }
 
     @Override
     public QueryPackage processQuery(TimeStamp qPrev) {
 //       if valueTS < q.prev then the replica manager is missing some updates.
-        if (valueTS.isBehindTimeStamp(qPrev)) {
-            return new QueryPackage(valueTS, "Replica Manager" + number + " is missing updates");
+        System.out.println("QPrev: " + qPrev + "\nValueTs: " + valueTS);
+        if (valueTS.isLessThan(qPrev)) {
+            return new QueryPackage(replicaTS, "Replica Manager " + number  + " can process query");
         }
-        return new QueryPackage(valueTS, "Replica Manager " + number  + " can process query");
+        return new QueryPackage(replicaTS, "Replica Manager" + number + " is missing updates");
     }
 
     @Override
-    public TimeStamp processUpdate(TimeStamp qPrev) {
-        if (valueTS.isBehindTimeStamp(qPrev)) {
-            return qPrev;
+    public TimeStamp processUpdate(TimeStamp qPrev, String operations, String frontEndIdentifier) {
+        if (updateManager.inLog(frontEndIdentifier)) return qPrev;
+        replicaTS.incrementFrontEnd(number);
+        TimeStamp ts = qPrev.getUniqueID(replicaTS, number);
+        if (updateManager.addToLog(ts, qPrev, frontEndIdentifier, operations)) {
+            valueTS.combineTimeStamps(ts);
+            System.out.println(valueTS + "\n" + ts);
         }
-        valueTS.incrementFrontEnd(number);
         updates++;
         if (updates == PublicInformation.requiredUpdates) {
             updates = 0;
@@ -39,14 +44,15 @@ public class Server implements ServerInterface{
                 Registry registry = LocateRegistry.getRegistry("localhost", 8000);
                 for (int i = 0; i < registry.list().length - 1; i++) {
                     if (i != number) {
-
+                        ServerInterface stub = (ServerInterface) registry.lookup("Server" + i);
+                        stub.gossip();
                     }
                 }
             } catch (Exception e ) {
                 e.printStackTrace();
             }
         }
-        return valueTS;
+        return ts;
     }
 
     @Override
