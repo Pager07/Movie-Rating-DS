@@ -3,8 +3,6 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class ServerStarter {
-
-//    Creates the number of servers specified by user
     public static void main(String[] args) {
         try {
             for (int i = 0; i < PublicInformation.numServers; i++) {

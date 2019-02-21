@@ -1,34 +1,29 @@
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class Server implements ServerInterface{
-    private TimeStamp valueTS;
+//    ValueTS: Contains all updates that have been applied (though not necessarily processed by RM)
+//    replicaTS: Contains all updates that have been accepted by RM (updated whenever an update has been applied to RM)
+    private TimeStamp valueTS, replicaTS;
     private ServerStatus status = ServerStatus.ACTIVE;
-    private int number;
+    private int number, updates = 0;
+    private UpdateManager updateManager;
 
     public Server(int number, int numServers){
-        this.number = number - 1;
+        this.number = number;
         valueTS = new TimeStamp(numServers);
-
-    }
-
-    public String sayHello(){
-        return "Replica Manager " + number +  " Successfully Connected to Client!";
-    }
-
-    @Override
-    public ServerStatus getServerStatus() {
-        return status;
+        updateManager = new UpdateManager(number);
     }
 
     @Override
     public QueryPackage processQuery(TimeStamp qPrev) {
 //       if valueTS < q.prev then the replica manager is missing some updates.
         if (valueTS.isBehindTimeStamp(qPrev)) {
-            return new QueryPackage(valueTS, "Replica Manager" + (number + 1) + " is missing updates");
+            return new QueryPackage(valueTS, "Replica Manager" + number + " is missing updates");
         }
-        return new QueryPackage(valueTS, "Replica Manager " + (number + 1) + " can process query");
+        return new QueryPackage(valueTS, "Replica Manager " + number  + " can process query");
     }
 
     @Override
@@ -37,8 +32,36 @@ public class Server implements ServerInterface{
             return qPrev;
         }
         valueTS.incrementFrontEnd(number);
-        System.out.println(valueTS);
+        updates++;
+        if (updates == PublicInformation.requiredUpdates) {
+            updates = 0;
+            try {
+                Registry registry = LocateRegistry.getRegistry("localhost", 8000);
+                for (int i = 0; i < registry.list().length - 1; i++) {
+                    if (i != number) {
+
+                    }
+                }
+            } catch (Exception e ) {
+                e.printStackTrace();
+            }
+        }
         return valueTS;
+    }
+
+    @Override
+    public ServerStatus getServerStatus() {
+        return status;
+    }
+
+    @Override
+    public void setServerStatus(ServerStatus status) {
+        this.status = status;
+    }
+
+    @Override
+    public void gossip() throws RemoteException {
+
     }
 
     //   Gets a specific movie and its ratings

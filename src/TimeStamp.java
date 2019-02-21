@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -18,6 +19,15 @@ public class TimeStamp implements Serializable {
         for (int i = 0; i < vector.size(); i++) {
             vector.set(i, otherTimeStamp.vector.get(i) > vector.get(i) ? otherTimeStamp.vector.get(i) : vector.get(i));
         }
+    }
+
+    public TimeStamp getUniqueID(TimeStamp valueTS, int replicaNumber) {
+        TimeStamp uniqueID = new TimeStamp(PublicInformation.numServers);
+        for (int i = 0; i < valueTS.vector.size(); i++) {
+            uniqueID.vector.set(i, vector.get(i));
+        }
+        uniqueID.vector.set(replicaNumber, valueTS.vector.get(replicaNumber));
+        return uniqueID;
     }
 
 
