@@ -1,14 +1,13 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.io.Serializable;
+import java.util.*;
 
-public class UpdateManager {
+public class UpdateManager implements Serializable {
     private int replicaNumber;
 //    Contains the timestamps of other RMs. Updated whenever you obtain a gossip message.
     private HashMap<Integer, TimeStamp> timeStampTable;
 //    Contains the unique front end identifier of ID (thus all we need to do is check the uID of an update)
     private HashSet<String> executedOperationTable;
-    private ArrayList<UpdateLogRecord> updateLog;
+    public ArrayList<UpdateLogRecord> updateLog;
     public ArrayList<String> updates;
 
     public UpdateManager(int replicaNumber){
@@ -24,13 +23,13 @@ public class UpdateManager {
     Returns true if we can merge valueTS with ts (which signifies that update can be applied)
      */
     public boolean addToLog(TimeStamp ts, TimeStamp qPrev, String frontEndIdentifier, String operations){
-        updateLog.add(new UpdateLogRecord(ts, qPrev, frontEndIdentifier, operations));
-        if (ts.isLessThan(qPrev)) {
+        updateLog.add(new UpdateLogRecord(replicaNumber, ts, qPrev, frontEndIdentifier, operations));
+        if (qPrev.isLessThan(ts)) {
 //            apply update
             updates.add(operations);
 //            add performed operations into the executed Operations Log
             executedOperationTable.add(frontEndIdentifier);
-            for (String update : updates) System.out.println(update);
+            timeStampTable.put(replicaNumber, ts);
             return true;
         }
         return false;
@@ -42,24 +41,57 @@ public class UpdateManager {
         return executedOperationTable.contains(uid);
     }
 
-
-    protected class UpdateLogRecord {
-        private TimeStamp ts, qPrev;
-        private String operations, frontEndIdentifier;
-        private int replicaNumber;
-
-        public UpdateLogRecord(TimeStamp ts, TimeStamp qPrev, String frontEndIdentifier, String operations) {
-            this.ts = ts;
-            this.replicaNumber = UpdateManager.this.replicaNumber;
-            this.qPrev = qPrev;
-            this.frontEndIdentifier = frontEndIdentifier;
-            this.operations = operations;
+    public void processGossip(ArrayList<UpdateLogRecord> sentLog, TimeStamp senderTS, TimeStamp recipientTS, int senderNumber) {
+        for (UpdateLogRecord record : sentLog) {
+            System.out.println(recipientTS + ", " + record.ts  + " " + recipientTS.isLessThan(record.ts));
+            if(recipientTS.isLessThan(record.ts)) {
+                recipientTS.combineTimeStamps(record.ts);
+                timeStampTable.put(replicaNumber, recipientTS);
+                updateLog.add(record);
+                System.out.println("Added Record: " + record);
+            }
         }
+        System.out.println("Applying Updates");
+        applyUpdates(recipientTS);
+        System.out.println("Discarding Old Logs");
+        discardOldLogs(senderTS, senderNumber);
+    }
 
-        @Override
-        public String toString() {
-            return "{" + ts + ", " + qPrev + ", "+ operations +
-                    ", " + frontEndIdentifier + ", " + replicaNumber + '}';
+
+    private void applyUpdates(TimeStamp recipientTS) {
+        LinkedList<UpdateLogRecord> stableUpdates = new LinkedList<>();
+        for (UpdateLogRecord record : updateLog) {
+            if (record.ts.isLessThan(recipientTS)) {
+                boolean notAdded = true;
+                for (int i = 0; i < stableUpdates.size(); i++) {
+                    if (record.qPrev.getSum() < stableUpdates.get(i).qPrev.getSum()) {
+                        stableUpdates.add(i, record);
+                        notAdded = false;
+                    }
+                }
+                if (notAdded) {
+                    stableUpdates.addLast(record);
+                }
+            }
+        }
+        for (UpdateLogRecord record : stableUpdates) {
+            updates.add(record.operations);
         }
     }
+
+    private void discardOldLogs(TimeStamp senderTS, int senderNumber) {
+        timeStampTable.put(senderNumber, senderTS);
+        ArrayList<UpdateLogRecord> unapprovedUpdates = new ArrayList<>();
+        for (UpdateLogRecord record : updateLog) {
+            boolean notUpdated = false;
+            for (int i = 0; i < PublicInformation.numServers; i++) {
+                if (timeStampTable.get(i).valueAt(replicaNumber) < record.ts.valueAt(i)) notUpdated = true;
+            }
+            if (!notUpdated) unapprovedUpdates.add(record);
+        }
+        updateLog = unapprovedUpdates;
+        System.out.println(Arrays.toString(updateLog.toArray()));
+    }
+
+
 }

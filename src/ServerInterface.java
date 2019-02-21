@@ -1,5 +1,6 @@
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 
 public interface ServerInterface extends Remote {
 
@@ -11,5 +12,5 @@ public interface ServerInterface extends Remote {
 
     public void setServerStatus(ServerStatus status) throws RemoteException;
 
-    public void gossip() throws RemoteException;
+    public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber) throws RemoteException;
 }

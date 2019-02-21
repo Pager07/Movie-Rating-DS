@@ -39,7 +39,7 @@ TimeStamp getUniqueID(TimeStamp valueTS, int replicaNumber) {
      */
     boolean isLessThan(TimeStamp otherTimeStamp) {
         for (int i = 0; i < otherTimeStamp.vector.size(); i++) {
-            if (otherTimeStamp.vector.get(i) > vector.get(i)) return false;
+            if (otherTimeStamp.vector.get(i) < vector.get(i)) return false;
         }
         return true;
     }
@@ -59,7 +59,6 @@ TimeStamp getUniqueID(TimeStamp valueTS, int replicaNumber) {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(vector);
     }
 
@@ -68,7 +67,20 @@ TimeStamp getUniqueID(TimeStamp valueTS, int replicaNumber) {
         StringBuilder builder = new StringBuilder();
         builder.append("<");
         for (Integer aVector : vector) builder.append(aVector).append(",");
+        builder.deleteCharAt(builder.length() - 1);
         builder.append(">");
         return builder.toString();
+    }
+
+    public int valueAt(int index) {
+        return vector.get(index);
+    }
+
+    public int getSum() {
+        int total = 0;
+        for (Integer aVector : vector) {
+            total += aVector;
+        }
+        return total;
     }
 }

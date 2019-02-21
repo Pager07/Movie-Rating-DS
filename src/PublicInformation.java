@@ -1,3 +1,3 @@
 public class PublicInformation {
-    public static int numServers = 5, requiredUpdates = 4;
+    public static int numServers = 2, requiredUpdates = 2;
 }
