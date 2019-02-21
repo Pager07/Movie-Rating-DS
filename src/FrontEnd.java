@@ -36,7 +36,6 @@ public class FrontEnd implements FrontEndInterface{
         if (stub != null) {
             try {
                 qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateMessage, UUID.randomUUID().toString()));
-                System.out.println(qPrev);
                 return "Update Processed For Replica Manager " + primaryStub;
             } catch (RemoteException e) {
                 e.printStackTrace();

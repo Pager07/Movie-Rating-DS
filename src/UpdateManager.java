@@ -4,7 +4,7 @@ import java.util.*;
 public class UpdateManager implements Serializable {
     private int replicaNumber;
 //    Contains the timestamps of other RMs. Updated whenever you obtain a gossip message.
-    private HashMap<Integer, TimeStamp> timeStampTable;
+    public HashMap<Integer, TimeStamp> timeStampTable;
 //    Contains the unique front end identifier of ID (thus all we need to do is check the uID of an update)
     private HashSet<String> executedOperationTable;
     public ArrayList<UpdateLogRecord> updateLog;
@@ -13,6 +13,7 @@ public class UpdateManager implements Serializable {
     public UpdateManager(int replicaNumber){
         this.replicaNumber = replicaNumber;
         timeStampTable = new HashMap<>();
+        for (int i = 0; i < PublicInformation.numServers; i++) timeStampTable.put(i, new TimeStamp(PublicInformation.numServers));
         executedOperationTable = new HashSet<>();
         updateLog = new ArrayList<>();
         updates = new ArrayList<>();

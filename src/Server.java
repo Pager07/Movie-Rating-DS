@@ -72,7 +72,7 @@ public class Server implements ServerInterface{
     @Override
     public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber){
         updateManager.processGossip(log, senderTimeStamp, replicaTS, senderNumber);
-        System.out.println(updateManager.updates);
+        valueTS = updateManager.timeStampTable.get(number);
     }
 
 //    public static void main(String[] args) {
