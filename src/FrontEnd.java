@@ -125,6 +125,17 @@ public class FrontEnd implements FrontEndInterface{
         }
     }
 
+//    Testing Methods
+
+
+    @Override
+    public String getTimeStamps(int serverNumber) throws RemoteException {
+        ServerInterface stub = locateStub(serverNumber);
+        if (stub != null) {
+            return stub.getTimeStamps();
+        }
+        return "Couldn't Find Replica" + serverNumber;
+    }
 
     public static void main(String[] args) {
         try {

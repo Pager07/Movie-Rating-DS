@@ -16,5 +16,6 @@ public interface FrontEndInterface extends Remote{
 
     public void setPrimaryServer(int serverNumber) throws RemoteException;
 
+    public String getTimeStamps(int serverNumber) throws RemoteException;
 
 }

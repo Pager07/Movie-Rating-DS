@@ -42,19 +42,20 @@ public class UpdateManager implements Serializable {
         return executedOperationTable.contains(uid);
     }
 
-    public void processGossip(ArrayList<UpdateLogRecord> sentLog, TimeStamp senderTS, TimeStamp recipientTS, int senderNumber) {
+    public void processGossip(ArrayList<UpdateLogRecord> sentLog, TimeStamp senderTS, TimeStamp replicaTS, TimeStamp valueTS, int senderNumber) {
         System.out.println("Going Through Sent Log:");
 //        Going through and adding to own log
         for (UpdateLogRecord record : sentLog) {
-            System.out.println(recipientTS + ", " + record.ts  + " " + recipientTS.isLessThan(record.ts));
-            if(recipientTS.isLessThan(record.ts) && !inLog(record.frontEndIdentifier)) {
+            System.out.println(replicaTS + ", " + record.ts  + " " + replicaTS.isLessThan(record.ts));
+            if(replicaTS.isLessThan(record.ts) && !inLog(record.frontEndIdentifier)) {
                 updateLog.add(record);
+                valueTS.incrementFrontEnd(record.replicaNumber);
                 System.out.println("Added Record to Own Log: " + record);
             }
         }
 //        Merging The Time Stamps
-        recipientTS.combineTimeStamps(senderTS);
-        timeStampTable.put(replicaNumber, recipientTS);
+        replicaTS.combineTimeStamps(senderTS);
+        timeStampTable.put(replicaNumber, replicaTS);
         System.out.println("\nApplying Updates");
         applyUpdates();
         System.out.println("\nDiscarding Old Logs");

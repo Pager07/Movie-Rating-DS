@@ -33,6 +33,9 @@ public class Client {
                         servers[i] = Integer.parseInt(userServers[i]);
                     }
                     stub.processUpdates(servers, message);
+                } else if (response.matches("timestamps")) {
+                    System.out.println("Which Server");
+                   System.out.println(stub.getTimeStamps(Integer.parseInt(scanner.next())));
                 } else if (response.matches("query")) {
                     System.out.println("Server: " + stub.processQuery());
                 } else if (response.matches("getstatus")) {

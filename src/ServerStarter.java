@@ -17,8 +17,8 @@ public class ServerStarter {
                 registry.bind("Server" + i, stub);
 
                 // Write ready message to console
-                System.out.println("Server" + i + " ready");
             }
+            System.out.println("Servers 0 - " + (PublicInformation.numServers - 1) + " ready");
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();

@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Server implements ServerInterface{
-//    ValueTS: Contains all updates that have been applied (though not necessarily processed by RM)
-//    replicaTS: Contains all updates that have been accepted by RM (updated whenever an update has been applied to RM)
+//    ValueTS: Contains all updates that have been applied (applied by RM)
+//    replicaTS: Contains all updates that have been accepted by RM (keeps track of all the other updates from Gossip)
     private TimeStamp valueTS, replicaTS;
     private ServerStatus status = ServerStatus.ACTIVE;
     private int number, updates = 0;
@@ -32,10 +32,12 @@ public class Server implements ServerInterface{
     public TimeStamp processUpdate(TimeStamp qPrev, String operations, String frontEndIdentifier) {
         if (updateManager.inLog(frontEndIdentifier)) return qPrev;
         System.out.println("Replica" + number + ": " + valueTS);
+//        Increment Time Stamps as update is valid
         replicaTS.incrementFrontEnd(number);
+        valueTS.incrementFrontEnd(number);
         TimeStamp ts = qPrev.getUniqueID(replicaTS, number);
         if (updateManager.addToLog(ts, qPrev, frontEndIdentifier, operations)) {
-            valueTS.combineTimeStamps(ts);
+            replicaTS.combineTimeStamps(ts);
         }
         updates++;
         if (updates == PublicInformation.requiredUpdates) {
@@ -74,7 +76,7 @@ public class Server implements ServerInterface{
     @Override
     public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber){
         System.out.println("Processing Gossip at Replica" + number);
-        updateManager.processGossip(log, senderTimeStamp, replicaTS, senderNumber);
+        updateManager.processGossip(log, senderTimeStamp, replicaTS, valueTS, senderNumber);
         System.out.println("Updates at Replica" + number  + ": " + Arrays.toString(updateManager.updates.toArray()));
         System.out.println("^^^^^^^^^^^^^^^^\n");
         valueTS = updateManager.timeStampTable.get(number);
@@ -83,7 +85,8 @@ public class Server implements ServerInterface{
             System.out.println("---------------------------------------------------------------------------");
             for (int i = 0; i < registry.list().length - 1; i++) {
                 ServerInterface stub = (ServerInterface) registry.lookup("Server" + i);
-                System.out.println("Replica" + i + " Updates: " + stub.getUpdates());
+                System.out.println("Replica" + i + " ValueTS:   " + stub.getValueTS());
+                System.out.println("Replica" + i + " ReplicaTS: " + stub.getReplicaTS());
             }
             System.out.println("---------------------------------------------------------------------------\n\n");
         } catch (Exception e) {
@@ -91,11 +94,27 @@ public class Server implements ServerInterface{
         }
     }
 
+
+//    Testing Methods
     @Override
     public String getUpdates() throws RemoteException {
         return Arrays.toString(updateManager.updates.toArray());
     }
 
+    @Override
+    public String getValueTS() throws RemoteException {
+        return valueTS.toString();
+    }
+
+    @Override
+    public String getReplicaTS() throws RemoteException {
+        return replicaTS.toString();
+    }
+
+    @Override
+    public String getTimeStamps() throws RemoteException {
+        return "ValueTS: " + valueTS.toString() + "\nReplicaTS: " + replicaTS.toString();
+    }
 
     //    public static void main(String[] args) {
 //        try {
