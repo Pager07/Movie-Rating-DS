@@ -8,6 +8,8 @@ public interface FrontEndInterface extends Remote{
 
     public String processUpdate(String updateMessage) throws RemoteException;
 
+    public void processUpdates(int[] servers, String updateMessage) throws RemoteException;
+
     public String getServerStatus(int serverNumber) throws RemoteException;
 
     public String setServerStatus(int serverNumber, ServerStatus status) throws RemoteException;

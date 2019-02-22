@@ -43,18 +43,19 @@ public class UpdateManager implements Serializable {
     }
 
     public void processGossip(ArrayList<UpdateLogRecord> sentLog, TimeStamp senderTS, TimeStamp recipientTS, int senderNumber) {
+        System.out.println("Going Through Sent Log:");
         for (UpdateLogRecord record : sentLog) {
             System.out.println(recipientTS + ", " + record.ts  + " " + recipientTS.isLessThan(record.ts));
             if(recipientTS.isLessThan(record.ts)) {
                 recipientTS.combineTimeStamps(record.ts);
                 timeStampTable.put(replicaNumber, recipientTS);
                 updateLog.add(record);
-                System.out.println("Added Record: " + record);
+                System.out.println("Added Record to Own Log: " + record);
             }
         }
-        System.out.println("Applying Updates");
+        System.out.println("\nApplying Updates");
         applyUpdates(recipientTS);
-        System.out.println("Discarding Old Logs");
+        System.out.println("\nDiscarding Old Logs");
         discardOldLogs(senderTS, senderNumber);
     }
 
@@ -77,6 +78,7 @@ public class UpdateManager implements Serializable {
         }
         for (UpdateLogRecord record : stableUpdates) {
             updates.add(record.operations);
+            System.out.println("Added To Updates: " + record.operations);
         }
     }
 
@@ -91,7 +93,7 @@ public class UpdateManager implements Serializable {
             if (!notUpdated) unapprovedUpdates.add(record);
         }
         updateLog = unapprovedUpdates;
-        System.out.println(Arrays.toString(updateLog.toArray()));
+        System.out.println("Final Update Log: " + Arrays.toString(updateLog.toArray()) + "\n");
     }
 
 

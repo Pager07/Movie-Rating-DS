@@ -23,5 +23,6 @@ public class ServerStarter {
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();
         }
+        System.out.println("---------------------\n\n");
     }
 }

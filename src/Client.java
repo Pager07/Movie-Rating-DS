@@ -23,6 +23,13 @@ public class Client {
                 if (response.matches("update")){
                     System.out.println("Update: ");
                     System.out.println("Server: " + stub.processUpdate(scanner.next()));
+                } else if (response.matches("updates")) {
+                    System.out.println("Update: ");
+                    String message = scanner.next();
+                    System.out.println("To Which Servers?");
+                    String[] userServers = scanner.next().replaceAll("\\s+", "").split(",");
+                    int[] servers = new int[userServers.length];
+                    stub.processUpdates(servers, message);
                 } else if (response.matches("query")) {
                     System.out.println("Server: " + stub.processQuery());
                 } else if (response.matches("getstatus")) {

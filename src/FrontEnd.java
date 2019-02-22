@@ -31,17 +31,25 @@ public class FrontEnd implements FrontEndInterface{
     }
 
     @Override
-    public String processUpdate(String updateMessage) {
+    public String processUpdate(String updateMessage) throws RemoteException{
         ServerInterface stub = locateStub(primaryStub);
         if (stub != null) {
-            try {
-                qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateMessage, UUID.randomUUID().toString()));
-                return "Update Processed For Replica Manager " + primaryStub;
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+            qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateMessage, UUID.randomUUID().toString()));
+            return "Update Processed For Replica Manager " + primaryStub;
+
         }
         return "Couldn't Find Server";
+    }
+
+    @Override
+    public void processUpdates(int[] servers, String updateMessage) throws RemoteException {
+        for (int server : servers) {
+            ServerInterface stub = locateStub(server);
+            if (stub != null) {
+                qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateMessage, UUID.randomUUID().toString()));
+                System.out.println("Update Processed At Replica" + server + "");
+            }
+        }
     }
 
     @Override

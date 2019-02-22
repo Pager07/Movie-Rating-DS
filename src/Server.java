@@ -38,7 +38,7 @@ public class Server implements ServerInterface{
         }
         updates++;
         if (updates == PublicInformation.requiredUpdates) {
-            System.out.println("Gossiping");
+            System.out.println("Gossiping\n********************");
             updates = 0;
             gossip();
         }
@@ -71,7 +71,10 @@ public class Server implements ServerInterface{
 
     @Override
     public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber){
+        System.out.println("Processing Gossip at Replica" + number);
         updateManager.processGossip(log, senderTimeStamp, replicaTS, senderNumber);
+        System.out.println("Updates at Replica" + number  + ": " + Arrays.toString(updateManager.updates.toArray()));
+        System.out.println("^^^^^^^^^^^^^^^^\n\n");
         valueTS = updateManager.timeStampTable.get(number);
     }
 
