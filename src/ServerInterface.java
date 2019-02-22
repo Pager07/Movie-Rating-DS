@@ -13,4 +13,6 @@ public interface ServerInterface extends Remote {
     public void setServerStatus(ServerStatus status) throws RemoteException;
 
     public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber) throws RemoteException;
+
+    public String getUpdates() throws RemoteException;
 }

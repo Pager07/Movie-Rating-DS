@@ -29,6 +29,9 @@ public class Client {
                     System.out.println("To Which Servers?");
                     String[] userServers = scanner.next().replaceAll("\\s+", "").split(",");
                     int[] servers = new int[userServers.length];
+                    for (int i = 0; i < userServers.length; i++) {
+                        servers[i] = Integer.parseInt(userServers[i]);
+                    }
                     stub.processUpdates(servers, message);
                 } else if (response.matches("query")) {
                     System.out.println("Server: " + stub.processQuery());

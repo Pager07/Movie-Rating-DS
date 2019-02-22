@@ -44,26 +44,28 @@ public class UpdateManager implements Serializable {
 
     public void processGossip(ArrayList<UpdateLogRecord> sentLog, TimeStamp senderTS, TimeStamp recipientTS, int senderNumber) {
         System.out.println("Going Through Sent Log:");
+//        Going through and adding to own log
         for (UpdateLogRecord record : sentLog) {
             System.out.println(recipientTS + ", " + record.ts  + " " + recipientTS.isLessThan(record.ts));
-            if(recipientTS.isLessThan(record.ts)) {
-                recipientTS.combineTimeStamps(record.ts);
-                timeStampTable.put(replicaNumber, recipientTS);
+            if(recipientTS.isLessThan(record.ts) && !inLog(record.frontEndIdentifier)) {
                 updateLog.add(record);
                 System.out.println("Added Record to Own Log: " + record);
             }
         }
+//        Merging The Time Stamps
+        recipientTS.combineTimeStamps(senderTS);
+        timeStampTable.put(replicaNumber, recipientTS);
         System.out.println("\nApplying Updates");
-        applyUpdates(recipientTS);
+        applyUpdates();
         System.out.println("\nDiscarding Old Logs");
         discardOldLogs(senderTS, senderNumber);
     }
 
 
-    private void applyUpdates(TimeStamp recipientTS) {
+    private void applyUpdates() {
         LinkedList<UpdateLogRecord> stableUpdates = new LinkedList<>();
         for (UpdateLogRecord record : updateLog) {
-            if (record.ts.isLessThan(recipientTS)) {
+            if (record.ts.isLessThan(timeStampTable.get(replicaNumber)) && !inLog(record.frontEndIdentifier)) {
                 boolean notAdded = true;
                 for (int i = 0; i < stableUpdates.size(); i++) {
                     if (record.qPrev.getSum() < stableUpdates.get(i).qPrev.getSum()) {
@@ -78,6 +80,7 @@ public class UpdateManager implements Serializable {
         }
         for (UpdateLogRecord record : stableUpdates) {
             updates.add(record.operations);
+            executedOperationTable.add(record.frontEndIdentifier);
             System.out.println("Added To Updates: " + record.operations);
         }
     }
@@ -86,11 +89,14 @@ public class UpdateManager implements Serializable {
         timeStampTable.put(senderNumber, senderTS);
         ArrayList<UpdateLogRecord> unapprovedUpdates = new ArrayList<>();
         for (UpdateLogRecord record : updateLog) {
-            boolean notUpdated = false;
+            boolean notProcessedEverywhere = true;
             for (int i = 0; i < PublicInformation.numServers; i++) {
-                if (timeStampTable.get(i).valueAt(replicaNumber) < record.ts.valueAt(i)) notUpdated = true;
+                if (timeStampTable.get(i).valueAt(record.replicaNumber) < record.ts.valueAt(record.replicaNumber)) {
+                    notProcessedEverywhere = false;
+                    break;
+                }
             }
-            if (!notUpdated) unapprovedUpdates.add(record);
+            if (notProcessedEverywhere) unapprovedUpdates.add(record);
         }
         updateLog = unapprovedUpdates;
         System.out.println("Final Update Log: " + Arrays.toString(updateLog.toArray()) + "\n");
