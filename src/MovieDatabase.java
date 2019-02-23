@@ -51,6 +51,8 @@ public class MovieDatabase {
             String line;
             String[] elements;
             while ((line = reader.readLine()) != null) {
+                if (line.length() < 5) break;
+                System.out.println(line);
                 if (line.contains("\"")) {
                     elements = processQuotation(line);
                 }
@@ -201,7 +203,9 @@ public class MovieDatabase {
     public static void main(String[] args) {
         MovieDatabase database = new MovieDatabase();
         for (String name : database.movieIDs.keySet()) {
-            System.out.println(name);
+            if(name.length() == 0) {
+                System.out.println(name + ", " + database.movieIDs.get(name));
+            }
         }
     }
 }
