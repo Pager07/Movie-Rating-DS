@@ -8,14 +8,52 @@ import java.util.HashMap;
 
 public class MovieDatabase {
     private HashMap<Integer, MovieRecord> movieDatabase;
-    private HashMap<Integer, Float> movieRating;
+    private HashMap<Integer, MovieRating> movieRating;
+    private HashMap<Integer, UserRatingManager> userRatings;
 
     public MovieDatabase() {
         this.movieDatabase = new HashMap<>();
         this.movieRating = new HashMap<>();
+        this.userRatings = new HashMap<>();
         fillMovieDatabase();
+        fillRating();
     }
 
+
+//    Get Methods For Movie Database
+    public String[] getMovieGenre(int movieID) {
+        return movieDatabase.get(movieID).genres;
+    }
+
+    public String getMovieName(int movieID) {
+        return movieDatabase.get(movieID).movieName;
+    }
+
+
+//    Get Method for Overall Movie Rating
+    public Float getMovieRating(int movieID) {
+        return movieRating.get(movieID).getRating();
+    }
+
+
+//    get method for user specific information.
+    public String getUserRatingFor(int userID, int movieID) {
+        return userRatings.get(userID).getUserRating(movieID);
+    }
+
+    public String getAllUserRatings(int userID) {
+        return userRatings.get(userID).toString();
+    }
+
+    public void addUserRating(int userID, int movieID, float rating, int timeStamp) {
+        userRatings.get(userID).addRating(movieID, rating, timeStamp);
+    }
+
+    public void deleteUserRating(int userID, int movieID) {
+        userRatings.get(userID).removeRating(movieID);
+    }
+
+//    Fill MovieDatabase Methods
     private void fillMovieDatabase(){
         try {
             BufferedReader reader = new BufferedReader(new FileReader(getFile("movies")));
@@ -49,6 +87,7 @@ public class MovieDatabase {
             elements[1] += splitString[i] + " ";
         }
         elements[1] = elements[1].substring(0, elements[1].length() - 1);
+//        Process End of Array
         elements[2] = splitString[splitString.length - 1];
         return elements;
     }
@@ -62,80 +101,83 @@ public class MovieDatabase {
     }
 
     private String processMiddle(String middle) {
-        System.out.println("Middle: " + middle);
-        ArrayList<String> components = new ArrayList<>();
-        StringBuilder builder = new StringBuilder();
-        boolean seenOpening = false;
-        for (char c : middle.toCharArray()) {
-            if (c == ',') {
-                if (seenOpening) {
-                    seenOpening = false;
-                    builder.append(')');
-                }
-                else {
-                    builder.append(' ');
-                }
-                components.add(builder.toString());
-                builder = new StringBuilder();
-            } else if( c == '(') {
-                seenOpening = true;
-                components.add(builder.toString());
-                builder = new StringBuilder();
-            } else if (c == ')') {
-                if (builder.charAt(0) == ' ') builder.replace(0, 1,"(");
-                else builder.insert(0, "(");
-                builder.append(' ');
-                components.add(builder.toString());
-                builder = new StringBuilder();
-            }
-            else {
-                builder.append(c);
-            }
+        String[] components = middle.split("\\(");
+        components[0] = processComma(components[0]);
+        for (int i = 1; i < components.length; i++) {
+            components[i] = "(" + processComma(components[i]) + ")";
         }
-        StringBuilder processed = joinMiddle(components);
-        while (processed.charAt(processed.length() - 1) == ' ') {
-            processed.deleteCharAt(processed.length() - 1);
+        return String.join(" ", components);
+    }
+
+    private String processComma(String line) {
+        line = line.replaceAll("\\)", "");
+        String[] components = line.split(",");
+        StringBuilder processed = new StringBuilder();
+        for (int i = components.length - 1; i >= 0; i--){
+            processed.append(components[i].trim()).append(" ");
         }
-        processed.append(")");
-        System.out.println("Processed: " + processed.toString() + "\n");
+        processed.deleteCharAt(processed.length() - 1);
         return processed.toString();
     }
 
+//    Get Ratings Method
+//    userID, movieID, rating, timeStamp
+    private void fillRating() {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(getFile("ratings")));
+            String line;
+            while( (line = reader.readLine()) != null) {
+                String[] components = line.split(",");
+                int userID = Integer.parseInt(components[0]), movieID = Integer.parseInt(components[1]), time = Integer.parseInt(components[3]);
+                float rating = Float.parseFloat(components[2]);
+                if (userRatings.get(userID) == null) {
+                    userRatings.put(userID, new UserRatingManager(userID));
+                }
+                userRatings.get(userID).addRating(movieID, rating, time);
+//                Put Movie Rating if Absent
+                movieRating.putIfAbsent(movieID, new MovieRating(0));
+//                Increment Movie Rating
+                movieRating.get(movieID).addRating(rating);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+//    Universal Methods
     private File getFile(String fileName) {
         return new File(System.getProperty("user.dir") + "/Movie Database/" + fileName + ".csv");
     }
-
-    private StringBuilder joinMiddle(ArrayList<String> components) {
-        StringBuilder processed = new StringBuilder();
-        if (components.size() % 2 == 1) {
-            for (int i = 0; i < components.size(); i += 2) {
-                if (i + 1 < components.size()) {
-                    processed.append(components.get(i + 1));
-                    processed.append(components.get(i));
-                } else {
-                    processed.append(components.get(i));
-                }
-            }
-        } else {
-
-        }
-        return processed;
-    }
-
-    public static void main(String[] args) {
-        new MovieDatabase();
-    }
-
 
     private class MovieRecord {
         private String movieName;
         private String[] genres;
 
-        public MovieRecord(String movieName, String genres) {
+        MovieRecord(String movieName, String genres) {
             this.movieName = movieName;
-            this.genres = genres.split("|");
+            this.genres = genres.split("\\|");
+        }
+    }
+
+    private class MovieRating {
+        private float sum;
+        private int ratings;
+
+        private MovieRating(float rating) {
+            sum = rating;
+            ratings = 1;
         }
 
+        private void addRating(float rating) {
+            sum += rating;
+            ratings++;
+        }
 
+        private float getRating() {
+            return sum / ratings;
+        }
     }
 }
