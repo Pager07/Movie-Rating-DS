@@ -8,7 +8,6 @@ import java.util.UUID;
 public class FrontEnd implements FrontEndInterface{
     private TimeStamp qPrev = new TimeStamp(PublicInformation.numServers);
     private int primaryStub = 0;
-    // TODO: 22/02/2019 Gossiping When more than 1 update sent simulatenously
 
     public String sayHello(){
         return "Front End Successfully Connected to Client!";
@@ -16,11 +15,11 @@ public class FrontEnd implements FrontEndInterface{
 
 
     @Override
-    public String processQuery(){
+    public String processQuery(String movieName){
         ServerInterface stub = locateStub(primaryStub);
         if (stub != null) {
             try {
-                QueryPackage queryResponse = stub.processQuery(qPrev);
+                QueryPackage queryResponse = stub.processQuery(qPrev, movieName);
                 qPrev = queryResponse.timeStamp;
                 return queryResponse.message;
             } catch (RemoteException e) {

@@ -2,9 +2,9 @@ import java.util.LinkedList;
 
 public class UserRatingManager {
     private int userID;
-    public LinkedList<UserRatings> ratings;
+    private LinkedList<UserRatings> ratings;
 
-    public UserRatingManager(int userID) {
+    UserRatingManager(int userID) {
         this.userID = userID;
         ratings = new LinkedList<>();
     }
@@ -36,10 +36,6 @@ public class UserRatingManager {
                 break;
             }
         }
-    }
-
-    public String test(){
-        return ratings.get(0).toString();
     }
 
     public String getUserRating(int movieID) {

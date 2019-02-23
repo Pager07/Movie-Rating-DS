@@ -6,6 +6,10 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class Client {
+    // TODO: 23/02/2019 Immediate Ordering (When Removing an Update) 
+    // TODO: 23/02/2019 Adding an update to client 
+    // TODO: 23/02/2019 Assign Client A Random ID When They Start The Program (simulates they are already on)
+    // TODO: 23/02/2019 Creates a completely new ID if they want to
     public static void main(String[] args){
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 8000);
@@ -35,9 +39,10 @@ public class Client {
                     stub.processUpdates(servers, message);
                 } else if (response.matches("timestamps")) {
                     System.out.println("Which Server");
-                   System.out.println(stub.getTimeStamps(Integer.parseInt(scanner.next())));
+                    System.out.println(stub.getTimeStamps(Integer.parseInt(scanner.next())));
                 } else if (response.matches("query")) {
-                    System.out.println("Server: " + stub.processQuery());
+                    System.out.println("Which Movie Would You Like To Find Out?: []");
+                    System.out.println("Server: " + stub.processQuery(scanner.next()));
                 } else if (response.matches("getstatus")) {
                     System.out.println("Which Server?");
                     int serverNum = Integer.parseInt(scanner.next());

@@ -2,47 +2,38 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
 public class MovieDatabase {
+    // TODO: 23/02/2019 Return Appropriate Response when no such movie exists
     private HashMap<Integer, MovieRecord> movieDatabase;
     private HashMap<Integer, MovieRating> movieRating;
+//    Keep This in for now, maybe in the future experiment with making the Keys the name of the Movie.
+    private HashMap<String, Integer> movieIDs;
     private HashMap<Integer, UserRatingManager> userRatings;
 
     public MovieDatabase() {
         this.movieDatabase = new HashMap<>();
         this.movieRating = new HashMap<>();
         this.userRatings = new HashMap<>();
+        this.movieIDs = new HashMap<>();
         fillMovieDatabase();
         fillRating();
     }
 
-
-//    Get Methods For Movie Database
-    public String[] getMovieGenre(int movieID) {
-        return movieDatabase.get(movieID).genres;
-    }
-
-    public String getMovieName(int movieID) {
-        return movieDatabase.get(movieID).movieName;
-    }
-
-
-//    Get Method for Overall Movie Rating
-    public Float getMovieRating(int movieID) {
-        return movieRating.get(movieID).getRating();
-    }
-
-
-//    get method for user specific information.
-    public String getUserRatingFor(int userID, int movieID) {
-        return userRatings.get(userID).getUserRating(movieID);
-    }
-
-    public String getAllUserRatings(int userID) {
-        return userRatings.get(userID).toString();
+//    Returns a String In The Form: Movie (Rating) Genres
+    public String queryDatabase(String movieName) {
+        int movieID = movieIDs.get(movieName);
+        StringBuilder builder = new StringBuilder();
+        builder.append(movieName);
+        builder.append(" (").append(movieDatabase.get(movieID).year).append(")");
+        builder.append("\nRating: ").append(movieRating.get(movieID).getRating()).append("\nGenres: ");
+        for (String genre : movieDatabase.get(movieID).genres) {
+            builder.append(genre).append(',');
+        }
+        builder.deleteCharAt(builder.length() - 1);
+        return builder.toString();
     }
 
     public void addUserRating(int userID, int movieID, float rating, int timeStamp) {
@@ -64,39 +55,59 @@ public class MovieDatabase {
                     elements = processQuotation(line);
                 }
                 else {
-                    elements = line.split(",");
+                    String[] components = line.split(",");
+                    elements = new String[4];
+                    elements[0] = components[0];
+                    removeYear(elements, components[1], false);
+                    elements[3] = components[2];
                 }
-                movieDatabase.put(Integer.parseInt(elements[0]), new MovieRecord(elements[1], elements[2]));
+                movieDatabase.put(Integer.parseInt(elements[0]), new MovieRecord(elements[1], elements[2], elements[3]));
+                movieIDs.put(elements[1], Integer.parseInt(elements[0]));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+
+//    Assumption: String is already processed, just need to remove year
+    private void removeYear(String[] elements, String line, boolean isParenthesis) {
+        String[] components = line.split("\\(");
+        elements[2] = components[components.length - 1].replaceAll("\\)", "");
+        elements[1] = "";
+        for (int i = 0; i < components.length - 1; i++) {
+            if (i < 1) {
+                elements[1] += components[i].trim();
+            } else {
+                elements[1] += (isParenthesis ? "(" : "") + components[i].trim();
+            }
+        }
+    }
+
     private String[] processQuotation(String line) {
         if (line.split("\\(").length > 2) return processParenthesis(line);
-        String[] elements = new String[3];
+        String[] elements = new String[4];
         String[] splitString = line.split(",");
         elements[0] = splitString[0];
-
 //        Processing Middle Portion of String
-        splitString[1] = splitString[1].substring(1);
         elements[1] = "";
-        splitString[splitString.length - 2] = splitString[splitString.length - 2].substring(0, splitString.length);
-        for (int i = splitString.length - 2; i > 0; i--) {
-            elements[1] += splitString[i] + " ";
+        for (int i = 1; i< splitString.length - 1; i++) {
+            elements[1] += splitString[i];
         }
-        elements[1] = elements[1].substring(0, elements[1].length() - 1);
+//        removes "
+        elements[1] = elements[1].replaceAll("\"", "");
 //        Process End of Array
-        elements[2] = splitString[splitString.length - 1];
+        removeYear(elements, elements[1], false);
+        elements[3] = splitString[splitString.length - 1];
         return elements;
     }
 
     private String[] processParenthesis(String line){
-        String[] elements = new String[3], components = line.split("\"");
+        String[] elements = new String[4], components = line.split("\"");
         elements[0] = components[0].substring(0, components[0].length() - 1);
         elements[1] = processMiddle(components[1]);
-        elements[2] = components[2].substring(1);
+        elements[3] = components[2].substring(1);
+        removeYear(elements, elements[1], true);
         return elements;
     }
 
@@ -153,12 +164,18 @@ public class MovieDatabase {
     }
 
     private class MovieRecord {
-        private String movieName;
+        private String movieName, year;
         private String[] genres;
 
-        MovieRecord(String movieName, String genres) {
+        MovieRecord(String movieName, String year, String genres) {
             this.movieName = movieName;
             this.genres = genres.split("\\|");
+            this.year = year;
+        }
+
+        @Override
+        public String toString() {
+            return movieName + " (" + year + ") " + "\nGenres: " + Arrays.toString(genres);
         }
     }
 
@@ -178,6 +195,13 @@ public class MovieDatabase {
 
         private float getRating() {
             return sum / ratings;
+        }
+    }
+
+    public static void main(String[] args) {
+        MovieDatabase database = new MovieDatabase();
+        for (String name : database.movieIDs.keySet()) {
+            System.out.println(name);
         }
     }
 }

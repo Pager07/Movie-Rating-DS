@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public interface ServerInterface extends Remote {
 
-    public QueryPackage processQuery(TimeStamp qPrev) throws RemoteException;
+    public QueryPackage processQuery(TimeStamp qPrev, String movieName) throws RemoteException;
 
     public TimeStamp processUpdate(TimeStamp qPrev, String update, String uniqueID) throws RemoteException;
 

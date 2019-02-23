@@ -11,19 +11,22 @@ public class Server implements ServerInterface{
     private ServerStatus status = ServerStatus.ACTIVE;
     private int number, updates = 0;
     private UpdateManager updateManager;
+    private MovieDatabase database;
 
     public Server(int number, int numServers){
         this.number = number;
         valueTS = new TimeStamp(numServers);
         replicaTS = new TimeStamp(numServers);
         updateManager = new UpdateManager(number);
+        database = new MovieDatabase();
     }
 
     @Override
-    public QueryPackage processQuery(TimeStamp qPrev) {
+    public QueryPackage processQuery(TimeStamp qPrev, String movieName) {
 //       if valueTS < q.prev then the replica manager is missing some updates.
         if (qPrev.isLessThan(valueTS)) {
-            return new QueryPackage(replicaTS, Arrays.toString(updateManager.updates.toArray()));
+            System.out.println("Movie Name: " + movieName);
+            return new QueryPackage(replicaTS, database.queryDatabase(movieName));
         }
         return new QueryPackage(replicaTS, "Replica Manager " + number + " can't process query");
     }
@@ -57,21 +60,6 @@ public class Server implements ServerInterface{
     public void setServerStatus(ServerStatus status) {
         this.status = status;
     }
-    
-
-    private void gossip() {
-        try {
-            Registry registry = LocateRegistry.getRegistry("localhost", 8000);
-            for (int i = 0; i < registry.list().length - 1; i++) {
-                if (i != number) {
-                    ServerInterface stub = (ServerInterface) registry.lookup("Server" + i);
-                    stub.processGossip(updateManager.updateLog, valueTS, number);
-                }
-            }
-        } catch (Exception e ) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber){
@@ -90,6 +78,20 @@ public class Server implements ServerInterface{
             }
             System.out.println("---------------------------------------------------------------------------\n\n");
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void gossip() {
+        try {
+            Registry registry = LocateRegistry.getRegistry("localhost", 8000);
+            for (int i = 0; i < registry.list().length - 1; i++) {
+                if (i != number) {
+                    ServerInterface stub = (ServerInterface) registry.lookup("Server" + i);
+                    stub.processGossip(updateManager.updateLog, valueTS, number);
+                }
+            }
+        } catch (Exception e ) {
             e.printStackTrace();
         }
     }

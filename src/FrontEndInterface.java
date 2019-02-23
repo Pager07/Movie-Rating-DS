@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 public interface FrontEndInterface extends Remote{
     public String sayHello() throws RemoteException;
 
-    public String processQuery() throws RemoteException;
+    public String processQuery(String movieName) throws RemoteException;
 
     public String processUpdate(String updateMessage) throws RemoteException;
 
