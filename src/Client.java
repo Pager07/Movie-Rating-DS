@@ -23,15 +23,15 @@ public class Client {
             Scanner scanner = new Scanner(System.in);
             while (isClientConnected) {
                 System.out.println("What Operations Would You Like To Perform: ");
-                String response = scanner.next().toLowerCase();
+                String response = scanner.nextLine().toLowerCase();
                 if (response.matches("update")){
                     System.out.println("Update: ");
-                    System.out.println("Server: " + stub.processUpdate(scanner.next()));
+                    System.out.println("Server: " + stub.processUpdate(scanner.nextLine()));
                 } else if (response.matches("updates")) {
                     System.out.println("Update: ");
-                    String message = scanner.next();
+                    String message = scanner.nextLine();
                     System.out.println("To Which Servers?");
-                    String[] userServers = scanner.next().replaceAll("\\s+", "").split(",");
+                    String[] userServers = scanner.nextLine().replaceAll("\\s+", "").split(",");
                     int[] servers = new int[userServers.length];
                     for (int i = 0; i < userServers.length; i++) {
                         servers[i] = Integer.parseInt(userServers[i]);
@@ -39,19 +39,21 @@ public class Client {
                     stub.processUpdates(servers, message);
                 } else if (response.matches("timestamps")) {
                     System.out.println("Which Server");
-                    System.out.println(stub.getTimeStamps(Integer.parseInt(scanner.next())));
+                    System.out.println(stub.getTimeStamps(Integer.parseInt(scanner.nextLine())));
                 } else if (response.matches("query")) {
-                    System.out.println("Which Movie Would You Like To Find Out?: []");
-                    System.out.println("Server: " + stub.processQuery(scanner.next()));
+                    System.out.println("Which Movie Would You Like To Find Out?: [Sabrina]");
+                    String movie = scanner.nextLine();
+                    System.out.println("User Says: " + movie);
+                    System.out.println("Server: " + stub.processQuery(movie));
                 } else if (response.matches("getstatus")) {
                     System.out.println("Which Server?");
-                    int serverNum = Integer.parseInt(scanner.next());
+                    int serverNum = Integer.parseInt(scanner.nextLine());
                     System.out.println("Server: " + stub.getServerStatus(serverNum));
                 } else if (response.matches("setstatus")) {
                     System.out.println("Which Server?");
-                    int serverNum = Integer.parseInt(scanner.next());
+                    int serverNum = Integer.parseInt(scanner.nextLine());
                     System.out.println("Select a Status: [Active, Overloaded, Offline]");
-                    String stringStatus = scanner.next().toUpperCase();
+                    String stringStatus = scanner.nextLine().toUpperCase();
                     ServerStatus status;
                     if (stringStatus.matches("ACTIVE")) {
                         status = ServerStatus.ACTIVE;
@@ -63,7 +65,7 @@ public class Client {
                     System.out.println("Server: " + stub.setServerStatus(serverNum, status));
                 } else if (response.matches("switch")) {
                     System.out.println("Which Server?");
-                    int serverNum = Integer.parseInt(scanner.next());
+                    int serverNum = Integer.parseInt(scanner.nextLine());
                     System.out.println(Arrays.toString(registry.list()));
                     stub.setPrimaryServer(serverNum);
                 }   else {

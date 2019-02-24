@@ -65,9 +65,6 @@ public class MovieDatabase {
             e.printStackTrace();
         }
 
-        for (int key : movieDatabase.keySet()) {
-            System.out.println(movieDatabase.get(key).toString());
-        }
     }
 
     //    Assumption: Given an already processed string
@@ -156,25 +153,5 @@ public class MovieDatabase {
         private float getRating() {
             return sum / ratings;
         }
-    }
-
-    public static void main(String[] args) {
-//        try {
-//            BufferedReader reader = new BufferedReader(new FileReader(new File(System.getProperty("user.dir") + "/Movie Database/movies.csv")));
-//            String line;
-//            while ((line = reader.readLine()) != null) {
-//                int count = 0, overallParenthesis = 0;
-//                for (int i = 0; i < line.length(); i++) {
-//                    if (line.charAt(i) == '(') {
-//                        overallParenthesis++;
-//                    }
-//                }
-//                if (overallParenthesis == 2) System.out.println(line);
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-        new MovieDatabase();
-
     }
 }
