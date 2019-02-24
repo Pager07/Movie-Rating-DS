@@ -42,9 +42,7 @@ public class Client {
                     System.out.println(stub.getTimeStamps(Integer.parseInt(scanner.nextLine())));
                 } else if (response.matches("query")) {
                     System.out.println("Which Movie Would You Like To Find Out?: [Sabrina]");
-                    String movie = scanner.nextLine();
-                    System.out.println("User Says: " + movie);
-                    System.out.println("Server: " + stub.processQuery(movie));
+                    System.out.println("Server: " + stub.processQuery(scanner.nextLine()));
                 } else if (response.matches("getstatus")) {
                     System.out.println("Which Server?");
                     int serverNum = Integer.parseInt(scanner.nextLine());
