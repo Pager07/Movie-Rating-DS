@@ -33,6 +33,31 @@ public class MovieDatabase {
         return builder.toString();
     }
 
+//    When Servers Close Down and To Save State of Machine
+// TODO: 24/02/2019 On Shutdown, get servers to gossip
+    private void saveDatabase() {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(getFile("movies")));
+            for (int key : movieDatabase.keySet()) {
+                MovieRecord record = movieDatabase.get(key);
+                System.out.println(record);
+                writer.write(key + "," + record.movieName + " (" + record.year + "),");
+                StringBuilder genre = new StringBuilder();
+                if (record.genres[0].matches("no genres listed")) genre = new StringBuilder("(" + record.genres[0] + ")");
+                else {
+                    for (String recordedGenre : record.genres) {
+                        genre.append(recordedGenre).append("|");
+                    }
+                    genre.deleteCharAt(genre.length() - 1);
+                }
+                writer.write(genre.toString() + "\n");
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void addUserRating(int userID, int movieID, float rating, int timeStamp) {
         userRatings.get(userID).addRating(movieID, rating, timeStamp);
     }
@@ -53,13 +78,12 @@ public class MovieDatabase {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] components = line.split(","), elements = new String[4];
-                if (components.length == 3) {
-                    elements[0] = components[0];
-                    removeYear(components[1], elements);
-                    elements[3] = components[components.length - 1];
-                    movieDatabase.put(Integer.parseInt(elements[0]), new MovieRecord(elements[1], elements[2], elements[3]));
-                    movieIDs.put(elements[1], Integer.parseInt(elements[0]));
-                }
+                elements[0] = components[0];
+                removeYear(components[1], elements);
+                elements[3] = components[components.length - 1];
+                movieDatabase.put(Integer.parseInt(elements[0]), new MovieRecord(elements[1], elements[2], elements[3]));
+                movieIDs.put(elements[1], Integer.parseInt(elements[0]));
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -108,7 +132,13 @@ public class MovieDatabase {
 
 //    Universal Methods
     private File getFile(String fileName) {
-        return new File(System.getProperty("user.dir") + "/Movie Database/" + fileName + ".csv");
+        File file =  new File(System.getProperty("user.dir") + "/Movie Database/" + fileName + ".csv");
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();;
+        }
+        return file;
     }
 
     private class MovieRecord {
@@ -153,5 +183,10 @@ public class MovieDatabase {
         private float getRating() {
             return sum / ratings;
         }
+    }
+
+    public static void main(String[] args) {
+        MovieDatabase database = new MovieDatabase();
+        database.saveDatabase();
     }
 }

@@ -6,10 +6,12 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class Client {
-    // TODO: 23/02/2019 Immediate Ordering (When Removing an Update) 
-    // TODO: 23/02/2019 Adding an update to client 
+    // TODO: 23/02/2019 Adding an update to client
     // TODO: 23/02/2019 Assign Client A Random ID When They Start The Program (simulates they are already on)
     // TODO: 23/02/2019 Creates a completely new ID if they want to
+
+    // TODO: 24/02/2019 Finish Adding Review
+    // TODO: 24/02/2019 Finish
     public static void main(String[] args){
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 8000);
@@ -41,7 +43,7 @@ public class Client {
                     System.out.println("Which Server");
                     System.out.println(stub.getTimeStamps(Integer.parseInt(scanner.nextLine())));
                 } else if (response.matches("query")) {
-                    System.out.println("Which Movie Would You Like To Find Out?: [Sabrina]");
+                    System.out.println("Which Movie Would You Like To Find Out?: [Sabrina, Toy Story]");
                     System.out.println("Server: " + stub.processQuery(scanner.nextLine()));
                 } else if (response.matches("getstatus")) {
                     System.out.println("Which Server?");
@@ -50,16 +52,7 @@ public class Client {
                 } else if (response.matches("setstatus")) {
                     System.out.println("Which Server?");
                     int serverNum = Integer.parseInt(scanner.nextLine());
-                    System.out.println("Select a Status: [Active, Overloaded, Offline]");
-                    String stringStatus = scanner.nextLine().toUpperCase();
-                    ServerStatus status;
-                    if (stringStatus.matches("ACTIVE")) {
-                        status = ServerStatus.ACTIVE;
-                    } else if (stringStatus.matches("OVERLOADED")) {
-                        status = ServerStatus.OVERLOADED;
-                    } else {
-                        status = ServerStatus.OFFLINE;
-                    }
+                    ServerStatus status = setServerStatus(scanner);
                     System.out.println("Server: " + stub.setServerStatus(serverNum, status));
                 } else if (response.matches("switch")) {
                     System.out.println("Which Server?");
@@ -81,4 +74,20 @@ public class Client {
             e.printStackTrace();
         }
     }
+
+    private static ServerStatus setServerStatus(Scanner scanner) {
+        System.out.println("Select a Status: [Active, Overloaded, Offline]");
+        String stringStatus = scanner.nextLine().toUpperCase();
+        ServerStatus status;
+        if (stringStatus.matches("ACTIVE")) {
+            status = ServerStatus.ACTIVE;
+        } else if (stringStatus.matches("OVERLOADED")) {
+            status = ServerStatus.OVERLOADED;
+        } else {
+            status = ServerStatus.OFFLINE;
+        }
+        return status;
+    }
+
+
 }
