@@ -1,12 +1,8 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 
 public class MovieDatabase {
-    // TODO: 23/02/2019 Return Appropriate Response when no such movie exists
     private HashMap<Integer, MovieRecord> movieDatabase;
     private HashMap<Integer, MovieRating> movieRating;
 //    Keep This in for now, maybe in the future experiment with making the Keys the name of the Movie.
@@ -24,6 +20,7 @@ public class MovieDatabase {
 
 //    Returns a String In The Form: Movie (Rating) Genres
     public String queryDatabase(String movieName) {
+        if (!movieIDs.containsKey(movieName)) return "Movie Not Found";
         int movieID = movieIDs.get(movieName);
         StringBuilder builder = new StringBuilder();
         builder.append(movieName);
@@ -45,93 +42,45 @@ public class MovieDatabase {
     }
 
 //    Fill MovieDatabase Methods
+/*
+    Put MovieRecord(movieName, year, genres) in movieDatabase as key movieID
+    Put movieID as key movieName and value movieID
+    Goal: split the line into an String[4] = [movieID, movieName, movieYear, movieGenres]
+ */
     private void fillMovieDatabase(){
         try {
             BufferedReader reader = new BufferedReader(new FileReader(getFile("movies")));
             String line;
-            String[] elements;
             while ((line = reader.readLine()) != null) {
-                if (line.length() < 5) break;
-                System.out.println(line);
-                if (line.contains("\"")) {
-                    elements = processQuotation(line);
-                }
-                else {
-                    String[] components = line.split(",");
-                    elements = new String[4];
+                String[] components = line.split(","), elements = new String[4];
+                if (components.length == 3) {
                     elements[0] = components[0];
-                    removeYear(elements, components[1], false);
-                    elements[3] = components[2];
+                    removeYear(components[1], elements);
+                    elements[3] = components[components.length - 1];
+                    movieDatabase.put(Integer.parseInt(elements[0]), new MovieRecord(elements[1], elements[2], elements[3]));
+                    movieIDs.put(elements[1], Integer.parseInt(elements[0]));
                 }
-                movieDatabase.put(Integer.parseInt(elements[0]), new MovieRecord(elements[1], elements[2], elements[3]));
-                movieIDs.put(elements[1], Integer.parseInt(elements[0]));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        for (int key : movieDatabase.keySet()) {
+            System.out.println(movieDatabase.get(key).toString());
+        }
     }
 
-
-//    Assumption: String is already processed, just need to remove year
-    private void removeYear(String[] elements, String line, boolean isParenthesis) {
-        String[] components = line.split("\\(");
-        elements[2] = components[components.length - 1].replaceAll("\\)", "");
-        elements[1] = "";
+    //    Assumption: Given an already processed string
+    private void removeYear(String processedString, String[] elements) {
+        String[] components = processedString.split("\\(");
         for (int i = 0; i < components.length - 1; i++) {
-            if (i < 1) {
-                elements[1] += components[i].trim();
-            } else {
-                elements[1] += (isParenthesis ? "(" : "") + components[i].trim();
-            }
+            if (i == 0 ) elements[1] = components[i];
+            else elements[1] += '(' + components[i];
         }
+        elements[1] = elements[1].substring(0, elements[1].length() - 1);
+        elements[2] = components[components.length - 1].substring(0, components[components.length - 1].length() - 1);
     }
 
-    private String[] processQuotation(String line) {
-        if (line.split("\\(").length > 2) return processParenthesis(line);
-        String[] elements = new String[4];
-        String[] splitString = line.split(",");
-        elements[0] = splitString[0];
-//        Processing Middle Portion of String
-        elements[1] = "";
-        for (int i = 1; i< splitString.length - 1; i++) {
-            elements[1] += splitString[i];
-        }
-//        removes "
-        elements[1] = elements[1].replaceAll("\"", "");
-//        Process End of Array
-        removeYear(elements, elements[1], false);
-        elements[3] = splitString[splitString.length - 1];
-        return elements;
-    }
-
-    private String[] processParenthesis(String line){
-        String[] elements = new String[4], components = line.split("\"");
-        elements[0] = components[0].substring(0, components[0].length() - 1);
-        elements[1] = processMiddle(components[1]);
-        elements[3] = components[2].substring(1);
-        removeYear(elements, elements[1], true);
-        return elements;
-    }
-
-    private String processMiddle(String middle) {
-        String[] components = middle.split("\\(");
-        components[0] = processComma(components[0]);
-        for (int i = 1; i < components.length; i++) {
-            components[i] = "(" + processComma(components[i]) + ")";
-        }
-        return String.join(" ", components);
-    }
-
-    private String processComma(String line) {
-        line = line.replaceAll("\\)", "");
-        String[] components = line.split(",");
-        StringBuilder processed = new StringBuilder();
-        for (int i = components.length - 1; i >= 0; i--){
-            processed.append(components[i].trim()).append(" ");
-        }
-        processed.deleteCharAt(processed.length() - 1);
-        return processed.toString();
-    }
 
 //    Get Ratings Method
 //    userID, movieID, rating, timeStamp
@@ -171,8 +120,17 @@ public class MovieDatabase {
 
         MovieRecord(String movieName, String year, String genres) {
             this.movieName = movieName;
-            this.genres = genres.split("\\|");
+            getGenres(genres);
             this.year = year;
+        }
+
+        private void getGenres(String genres) {
+            if (genres.contains("(")) {
+                this.genres = new String[] {genres.substring(1, genres.length() - 1)};
+            }
+            else {
+                this.genres = genres.split(",");
+            }
         }
 
         @Override
@@ -201,11 +159,22 @@ public class MovieDatabase {
     }
 
     public static void main(String[] args) {
-        MovieDatabase database = new MovieDatabase();
-        for (String name : database.movieIDs.keySet()) {
-            if(name.length() == 0) {
-                System.out.println(name + ", " + database.movieIDs.get(name));
-            }
-        }
+//        try {
+//            BufferedReader reader = new BufferedReader(new FileReader(new File(System.getProperty("user.dir") + "/Movie Database/movies.csv")));
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                int count = 0, overallParenthesis = 0;
+//                for (int i = 0; i < line.length(); i++) {
+//                    if (line.charAt(i) == '(') {
+//                        overallParenthesis++;
+//                    }
+//                }
+//                if (overallParenthesis == 2) System.out.println(line);
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        new MovieDatabase();
+
     }
 }
