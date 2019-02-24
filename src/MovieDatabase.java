@@ -33,6 +33,11 @@ public class MovieDatabase {
         return builder.toString();
     }
 
+    public void shutDownServer() {
+        saveDatabase();
+        saveRatings();
+    }
+
 //    When Servers Close Down and To Save State of Machine
 // TODO: 24/02/2019 On Shutdown, get servers to gossip
     private void saveDatabase() {
@@ -52,6 +57,21 @@ public class MovieDatabase {
                 }
                 writer.write(genre.toString() + "\n");
             }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveRatings() {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(getFile("ratings")));
+            StringBuilder builder = new StringBuilder();
+            for (int user : userRatings.keySet()) {
+                builder.append(userRatings.get(user).toString());
+            }
+            builder.deleteCharAt(builder.length() - 1);
+            writer.write(builder.toString());
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -90,6 +110,7 @@ public class MovieDatabase {
         }
 
     }
+
 
     //    Assumption: Given an already processed string
     private void removeYear(String processedString, String[] elements) {
@@ -185,8 +206,4 @@ public class MovieDatabase {
         }
     }
 
-    public static void main(String[] args) {
-        MovieDatabase database = new MovieDatabase();
-        database.saveDatabase();
-    }
 }
