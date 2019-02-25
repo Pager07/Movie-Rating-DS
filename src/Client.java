@@ -91,15 +91,15 @@ public class Client {
     private static void getUserID(Scanner scanner, FrontEndInterface frontEnd) {
         System.out.println("Do You Want To Be An Existing User? (yes/no)");
         String response = scanner.nextLine().toLowerCase().trim();
-        if(response.matches("yes")) {
+        if(response.matches("no")) {
             try {
                 userID = Integer.toString(frontEnd.createNewUser());
             } catch (RemoteException e) {
                 e.printStackTrace();
-                userID = Integer.toString(new Random().nextInt(249) + 1);
+                userID = Integer.toString(new Random().nextInt(249));
             }
         } else {
-            userID = Integer.toString(new Random().nextInt(249) + 1);
+            userID = Integer.toString(new Random().nextInt(249));
         }
         System.out.println("Assigned User ID: " + userID);
     }

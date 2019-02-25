@@ -19,7 +19,7 @@ public class MovieDatabase {
     }
 
     public int createNewUser() {
-        return userRatings.size();
+        return userRatings.size() + 1;
     }
 
 //    Purpose: main method that Server calls to query database
