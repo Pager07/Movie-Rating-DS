@@ -104,7 +104,7 @@ public class Server implements ServerInterface {
 //            remove Review
         } else if (operations.length == 3) {
 //            adding Movie
-            database.addMovie(operations);
+            database.addMovie(operations[0], operations[1], operations[2]);
         } else {
 //            adding Review
         }

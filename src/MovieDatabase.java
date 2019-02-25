@@ -15,6 +15,12 @@ public class MovieDatabase {
         this.userRatings = new HashMap<>();
         this.movieIDs = new HashMap<>();
         fillMovieDatabase();
+        for (int key : movieDatabase.keySet()) {
+            System.out.println(movieDatabase.get(key));
+        }
+        for (int key : userRatings.keySet()) {
+            System.out.println(userRatings.get(key));
+        }
         fillRating();
     }
 
@@ -108,8 +114,9 @@ public class MovieDatabase {
      */
     public String addMovie(String movieName, String year, String genres) {
         if (movieIDs.containsKey(movieName)) return "Movie Already Exists in Database";
-//        Generate Unique ID
-        int uniqueID = 
+////        Generate Unique ID
+//        int uniqueID =
+        return "1";
     }
 
     public void addUserRating(int userID, int movieID, float rating) {
@@ -166,7 +173,7 @@ public class MovieDatabase {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] components = line.split(",");
-                int userID = Integer.parseInt(components[0]), movieID = Integer.parseInt(components[1]), time = Integer.parseInt(components[3]);
+                int userID = Integer.parseInt(components[0]), movieID = Integer.parseInt(components[1]);
                 float rating = Float.parseFloat(components[2]);
                 if (userRatings.get(userID) == null) {
                     userRatings.put(userID, new UserRatingManager(userID));
@@ -240,5 +247,19 @@ public class MovieDatabase {
         }
     }
 
+
+    public static void main(String[] args) throws IOException{
+        BufferedReader reader = new BufferedReader(new FileReader(new MovieDatabase().getFile("movies")));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            int numberParenthesis = 0;
+            for (int i = 0; i < line.length(); i++) {
+                if (line.charAt(i) == '(') {
+                    if (!Character.isDigit(line.charAt(i + 1))) numberParenthesis++;
+                }
+            }
+            if (numberParenthesis == 0) System.out.println(line);
+        }
+    }
 
 }
