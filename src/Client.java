@@ -97,43 +97,40 @@ public class Client {
                 userID = Integer.toString(frontEnd.createNewUser());
             } catch (RemoteException e) {
                 e.printStackTrace();
-                userID = Integer.toString(new Random().nextInt(249));
+                userID = Integer.toString(new Random().nextInt(249) + 1);
             }
         } else {
-            userID = Integer.toString(new Random().nextInt(249));
+            userID = Integer.toString(new Random().nextInt(249) + 1);
         }
         System.out.println("Assigned User ID: " + userID);
     }
 
     //    Update Methods
-    // TODO: 24/02/2019 remove movie function
     private static String[] processUpdate(Scanner scanner) {
-        System.out.println("What operation would you like to perform: [addMovie, addReview, removeReview]");
+        System.out.println("What operation would you like to perform:");
         System.out.println("addMovie: Adds movie to the database");
         System.out.println("addReview: Adds review of a movie to database");
-        System.out.println("removeReview: Removes a specified user review");
         String response = scanner.nextLine().toLowerCase();
         if (response.matches("addmovie")) return addMovie(scanner);
         else return createRating(scanner);
     }
 
-    //    Review will be sent as a [movieName, review, timeStamp, -]
+    //    Review will be sent as a [userID, movieName, review]
 //    length 4 because it makes it easier to add movie (by distinguishing what operations to do)
     private static String[] createRating(Scanner scanner) {
-        String[] review = new String[4];
+        String[] review = new String[3];
+        review[0] = userID;
         System.out.println("What Movie Would You Like To Review");
-        review[0] = scanner.nextLine();
+        review[1] = scanner.nextLine();
         System.out.println("What Rating Out Of Five Would You Give It?");
-        review[1] = scanner.next();
-        //        Append Random Time Stamp
-        review[2] = "892332";
+        review[2] = scanner.nextLine();
         return review;
     }
 
 
-    //    Movie Will Be Sent as: movieName, year, Genres
+    //    Movie Will Be Sent as: [movieName, year, Genres, review]
     private static String[] addMovie(Scanner scanner) {
-        String[] movie = new String[2];
+        String[] movie = new String[4];
         System.out.println("What is the Movie's Name:");
         movie[0] = scanner.nextLine();
         System.out.println("When Did The Movie Come Out");
@@ -146,8 +143,12 @@ public class Client {
             System.out.println("Continue adding genre? (yes/no)");
             if (scanner.nextLine().toLowerCase().matches("no")) addingGenres = false;
         }
-        genres.deleteCharAt(genres.length() - 1);
-        movie[1] = genres.toString();
+        if (genres.charAt(genres.length() - 1) == '|') {
+            genres.deleteCharAt(genres.length() - 1);
+        }
+        movie[2] = genres.toString();
+        System.out.println("What Review (out of 5) Would You Give It?");
+        movie[3] = scanner.nextLine().trim();
         return movie;
     }
 

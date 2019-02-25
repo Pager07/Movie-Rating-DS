@@ -5,19 +5,20 @@ public class UpdateManager implements Serializable {
     //    Contains the timestamps of other RMs. Updated whenever you obtain a gossip message.
     public HashMap<Integer, TimeStamp> timeStampTable;
     public ArrayList<UpdateLogRecord> updateLog;
-    public ArrayList<String[]> updates;
+    private MovieDatabase movieDatabase;
     private int replicaNumber;
     //    Contains the unique front end identifier of ID (thus all we need to do is check the uID of an update)
     private HashSet<String> executedOperationTable;
 
-    public UpdateManager(int replicaNumber) {
+    public UpdateManager(int replicaNumber, MovieDatabase movieDatabase) {
         this.replicaNumber = replicaNumber;
+//        Reference to the Server's Database
+        this.movieDatabase = movieDatabase;
         timeStampTable = new HashMap<>();
         for (int i = 0; i < PublicInformation.numServers; i++)
             timeStampTable.put(i, new TimeStamp(PublicInformation.numServers));
         executedOperationTable = new HashSet<>();
         updateLog = new ArrayList<>();
-        updates = new ArrayList<>();
     }
 
 
@@ -28,7 +29,7 @@ public class UpdateManager implements Serializable {
         updateLog.add(new UpdateLogRecord(replicaNumber, ts, qPrev, frontEndIdentifier, operations));
         if (qPrev.isLessThan(ts)) {
 //            apply update
-            updates.add(operations);
+            movieDatabase.processUpdate(operations);
 //            add performed operations into the executed Operations Log
             executedOperationTable.add(frontEndIdentifier);
             timeStampTable.put(replicaNumber, ts);
@@ -81,9 +82,9 @@ public class UpdateManager implements Serializable {
             }
         }
         for (UpdateLogRecord record : stableUpdates) {
-            updates.add(record.operations);
+            movieDatabase.processUpdate(record.operations);
             executedOperationTable.add(record.frontEndIdentifier);
-            System.out.println("Added To Updates: " + record.operations);
+            System.out.println("Added To Updates: " + Arrays.toString(record.operations));
         }
     }
 

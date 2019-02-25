@@ -17,8 +17,8 @@ public class Server implements ServerInterface {
         this.number = number;
         valueTS = new TimeStamp(numServers);
         replicaTS = new TimeStamp(numServers);
-        updateManager = new UpdateManager(number);
         database = new MovieDatabase();
+        updateManager = new UpdateManager(number, database);
     }
 
     @Override
@@ -63,7 +63,6 @@ public class Server implements ServerInterface {
     public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber) {
         System.out.println("Processing Gossip at Replica" + number);
         updateManager.processGossip(log, senderTimeStamp, replicaTS, valueTS, senderNumber);
-        System.out.println("Updates at Replica" + number + ": " + Arrays.toString(updateManager.updates.toArray()));
         System.out.println("^^^^^^^^^^^^^^^^\n");
         valueTS = updateManager.timeStampTable.get(number);
         try {
@@ -111,11 +110,6 @@ public class Server implements ServerInterface {
     }
 
     //    Testing Methods
-    @Override
-    public String getUpdates() throws RemoteException {
-        return Arrays.toString(updateManager.updates.toArray());
-    }
-
     @Override
     public String getValueTS() throws RemoteException {
         return valueTS.toString();

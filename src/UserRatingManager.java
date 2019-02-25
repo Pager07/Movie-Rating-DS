@@ -1,14 +1,7 @@
 import java.util.LinkedList;
 
 public class UserRatingManager {
-    private int userID;
-    private LinkedList<UserRatings> ratings;
-
-    UserRatingManager(int userID) {
-        this.userID = userID;
-        ratings = new LinkedList<>();
-    }
-
+    private LinkedList<UserRatings> ratings = new LinkedList<>();
 
     //  Behaviour: The linkedlist is sorted such that those with a smaller movieID comes first
 //  To Add To Linked List: Iterate through the LinkedList till you find that the current movieID you are trying to add
@@ -28,17 +21,7 @@ public class UserRatingManager {
         ratings.addLast(new UserRatings(movieName, movieID, rating));
     }
 
-    //    Iterate through Linked list till you find the same movieID in the list then return.
-    public void removeRating(int movieID) {
-        for (int i = 0; i < ratings.size(); i++) {
-            if (ratings.get(i).movieID == movieID) {
-                ratings.remove(i);
-                break;
-            }
-        }
-    }
-
-    public String getUserRating(int movieID) {
+    public String getUserRatingFor(int movieID) {
         for (int i = 0; i < ratings.size(); i++) {
             if (ratings.get(i).movieID == movieID) {
                 return Float.toString(ratings.get(i).rating);

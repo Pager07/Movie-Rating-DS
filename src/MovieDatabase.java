@@ -15,12 +15,6 @@ public class MovieDatabase {
         this.userRatings = new HashMap<>();
         this.movieIDs = new HashMap<>();
         fillMovieDatabase();
-        for (int key : movieDatabase.keySet()) {
-            System.out.println(movieDatabase.get(key));
-        }
-        for (int key : userRatings.keySet()) {
-            System.out.println(userRatings.get(key));
-        }
         fillRating();
     }
 
@@ -36,6 +30,30 @@ public class MovieDatabase {
         return findMovie(queryOperations[0]);
 
     }
+
+//    Purpose: main method that Server calls to Process an Update
+//    Review will be sent as a [userID, movieName, review]
+//    addMovie Will Be Sent as: [movieName, year, Genres, review]
+    public void processUpdate(String[] updateOperations) {
+        if (updateOperations.length == 3) {
+//            Adding Movie Review
+            if (movieIDs.containsKey(updateOperations[1])) {
+                int userID = Integer.parseInt(updateOperations[0]), movieID = movieIDs.get(updateOperations[1]);
+                movieRating.get(movieID).addRating(Float.parseFloat(updateOperations[2]));
+                userRatings.get(userID).addRating(updateOperations[1], movieID, Float.parseFloat(updateOperations[2]));
+            }
+        } else {
+//            Adding Movie To Database
+            if (!movieIDs.containsKey(updateOperations[0])) {
+                int id = movieIDs.size() + 1;
+                movieIDs.put(updateOperations[0], id);
+                movieDatabase.put(id, new MovieRecord(updateOperations[0], updateOperations[1], updateOperations[2]));
+                movieRating.put(id, new MovieRating(Float.parseFloat(updateOperations[3])));
+                System.out.println("Processed Update");
+            }
+        }
+    }
+
 
     //    Purpose: Find All Information of Specific Movie
     private String findMovie(String movieName) {
@@ -71,7 +89,6 @@ public class MovieDatabase {
             BufferedWriter writer = new BufferedWriter(new FileWriter(getFile("movies")));
             for (int key : movieDatabase.keySet()) {
                 MovieRecord record = movieDatabase.get(key);
-                System.out.println(record);
                 writer.write(key + "," + record.movieName + " (" + record.year + "),");
                 StringBuilder genre = new StringBuilder();
                 if (record.genres[0].matches("no genres listed"))
@@ -123,9 +140,6 @@ public class MovieDatabase {
         userRatings.get(userID).addRating(movieDatabase.get(movieID).movieName, movieID, rating);
     }
 
-    public void deleteUserRating(int userID, int movieID) {
-        userRatings.get(userID).removeRating(movieID);
-    }
 
     //    Fill MovieDatabase Methods
 /*
@@ -176,7 +190,7 @@ public class MovieDatabase {
                 int userID = Integer.parseInt(components[0]), movieID = Integer.parseInt(components[1]);
                 float rating = Float.parseFloat(components[2]);
                 if (userRatings.get(userID) == null) {
-                    userRatings.put(userID, new UserRatingManager(userID));
+                    userRatings.put(userID, new UserRatingManager());
                 }
                 userRatings.get(userID).addRating(movieDatabase.get(movieID).movieName, movieID, rating);
 //                Put Movie Rating if Absent
@@ -246,20 +260,4 @@ public class MovieDatabase {
             return sum / ratings;
         }
     }
-
-
-    public static void main(String[] args) throws IOException{
-        BufferedReader reader = new BufferedReader(new FileReader(new MovieDatabase().getFile("movies")));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            int numberParenthesis = 0;
-            for (int i = 0; i < line.length(); i++) {
-                if (line.charAt(i) == '(') {
-                    if (!Character.isDigit(line.charAt(i + 1))) numberParenthesis++;
-                }
-            }
-            if (numberParenthesis == 0) System.out.println(line);
-        }
-    }
-
 }
