@@ -8,10 +8,6 @@ import java.util.Scanner;
 
 public class Client {
     // TODO: 23/02/2019 Adding an update to client
-    // TODO: 23/02/2019 Assign Client A Random ID When They Start The Program (simulates they are already on)
-    // TODO: 23/02/2019 Creates a completely new ID if they want to
-
-    // TODO: 24/02/2019 Change User Ratings To Be: "Movie Name: Rating"
     private static String userID;
 
     public static void main(String[] args) {
@@ -128,9 +124,9 @@ public class Client {
     }
 
 
-    //    Movie Will Be Sent as: [movieName, year, Genres, review]
+    //    Movie Will Be Sent as: [movieName, year, Genres, review, userID]
     private static String[] addMovie(Scanner scanner) {
-        String[] movie = new String[4];
+        String[] movie = new String[5];
         System.out.println("What is the Movie's Name:");
         movie[0] = scanner.nextLine();
         System.out.println("When Did The Movie Come Out");
@@ -149,24 +145,33 @@ public class Client {
         movie[2] = genres.toString();
         System.out.println("What Review (out of 5) Would You Give It?");
         movie[3] = scanner.nextLine().trim();
+        movie[4] = userID;
         return movie;
     }
 
 
     //    Query Methods
 //    Movie Rating: [movieName]
-//    All user ratings: [userID, -] (makes it easier to determine what operation to perform later on)
+//    All user ratings: [userID, -]
+//    Specific Rating: [userID, MovieName, -](makes it easier to determine what operation to perform later on)
     private static String[] processQuery(Scanner scanner) {
         System.out.println("What Would Query Operation Would You To Perform:");
         System.out.println("movieRating: Finds General Information About a Specific Movie");
+        System.out.println("userRatingFor: Finds Specific Rating By User");
         System.out.println("userRatings: List all ratings by the user");
         String response = scanner.nextLine().toLowerCase();
         if (response.matches("movierating")) {
             System.out.println("What Movie Would You Like to Find?: [Sabrina, Toy Story]");
             return new String[]{scanner.nextLine()};
-        } else {
+        } else if(response.matches("userratings")) {
             String[] answer = new String[2];
             answer[0] = userID;
+            return answer;
+        } else {
+            String[] answer = new String[3];
+            answer[0] = userID;
+            System.out.println("What Movie Would You Like To Find?: [Sabrina, Toy Story]");
+            answer[1] = scanner.nextLine();
             return answer;
         }
     }

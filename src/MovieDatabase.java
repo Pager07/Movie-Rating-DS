@@ -22,38 +22,22 @@ public class MovieDatabase {
         return userRatings.size() + 1;
     }
 
-    //    Purpose: main method that Server calls to query database
+//    Purpose: main method that Server calls to query database
+//    Movie Rating: [movieName]
+//    All user ratings: [userID, -]
+//    Specific Rating: [userID, MovieName, -]
     public String queryDatabase(String[] queryOperations) {
         if (queryOperations.length == 2) {
             return getUserRatings(Integer.parseInt(queryOperations[0]));
+        } else if (queryOperations.length == 3) {
+//            Get Specific Review For Client
+            if (!movieIDs.containsKey(queryOperations[1])) return "No Review Exists";
+            int movieID = movieIDs.get(queryOperations[1]), userID = Integer.parseInt(queryOperations[0]);
+            return userRatings.get(userID).getUserRatingFor(movieID);
         }
         return findMovie(queryOperations[0]);
 
     }
-
-//    Purpose: main method that Server calls to Process an Update
-//    Review will be sent as a [userID, movieName, review]
-//    addMovie Will Be Sent as: [movieName, year, Genres, review]
-    public void processUpdate(String[] updateOperations) {
-        if (updateOperations.length == 3) {
-//            Adding Movie Review
-            if (movieIDs.containsKey(updateOperations[1])) {
-                int userID = Integer.parseInt(updateOperations[0]), movieID = movieIDs.get(updateOperations[1]);
-                movieRating.get(movieID).addRating(Float.parseFloat(updateOperations[2]));
-                userRatings.get(userID).addRating(updateOperations[1], movieID, Float.parseFloat(updateOperations[2]));
-            }
-        } else {
-//            Adding Movie To Database
-            if (!movieIDs.containsKey(updateOperations[0])) {
-                int id = movieIDs.size() + 1;
-                movieIDs.put(updateOperations[0], id);
-                movieDatabase.put(id, new MovieRecord(updateOperations[0], updateOperations[1], updateOperations[2]));
-                movieRating.put(id, new MovieRating(Float.parseFloat(updateOperations[3])));
-                System.out.println("Processed Update");
-            }
-        }
-    }
-
 
     //    Purpose: Find All Information of Specific Movie
     private String findMovie(String movieName) {
@@ -75,6 +59,33 @@ public class MovieDatabase {
         if (!userRatings.containsKey(userID)) return "User Contains No Reviews";
         return userRatings.get(userID).toString();
     }
+
+//    Purpose: main method that Server calls to Process an Update
+//    Review will be sent as a [userID, movieName, review]
+//    addMovie Will Be Sent as: [movieName, year, Genres, review, userID]
+    public void processUpdate(String[] updateOperations) {
+        if (updateOperations.length == 3) {
+//            Adding Movie Review
+            if (movieIDs.containsKey(updateOperations[1])) {
+                int userID = Integer.parseInt(updateOperations[0]), movieID = movieIDs.get(updateOperations[1]);
+                movieRating.get(movieID).addRating(Float.parseFloat(updateOperations[2]));
+                userRatings.get(userID).addRating(updateOperations[1], movieID, Float.parseFloat(updateOperations[2]));
+            } else {
+                System.out.println("No Movie in Database");
+            }
+        } else {
+//            Adding Movie To Database
+            if (!movieIDs.containsKey(updateOperations[0])) {
+                int id = movieIDs.size() + 1;
+                movieIDs.put(updateOperations[0], id);
+                movieDatabase.put(id, new MovieRecord(updateOperations[0], updateOperations[1], updateOperations[2]));
+                movieRating.put(id, new MovieRating(Float.parseFloat(updateOperations[3])));
+                userRatings.get(Integer.parseInt(updateOperations[4])).addRating(updateOperations[0], id, Float.parseFloat(updateOperations[3]));
+                System.out.println("Processed Update");
+            }
+        }
+    }
+
 
 
     // TODO: 24/02/2019 On Shutdown, get servers to gossip
