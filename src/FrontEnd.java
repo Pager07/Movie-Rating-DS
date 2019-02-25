@@ -7,7 +7,113 @@ import java.util.UUID;
 
 public class FrontEnd implements FrontEndInterface {
     private TimeStamp qPrev = new TimeStamp(PublicInformation.numServers);
-    private int primaryStub = 0;
+
+    public String sayHello() {
+        return "Front End Successfully Connected to Client!";
+    }
+
+    @Override
+    public String processQuery(String[] operations, int primaryServer) {
+        ServerInterface stub = locateServer(primaryServer);
+        if (stub != null) {
+            try {
+                QueryPackage queryResponse = stub.processQuery(qPrev, operations);
+                qPrev = queryResponse.timeStamp;
+                return queryResponse.message;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return "Couldn't Find Server";
+    }
+
+    @Override
+    public int createNewUser(int primaryServer) throws RemoteException {
+        ServerInterface stub = locateServer(primaryServer);
+        if (stub != null) {
+            try {
+                return stub.createNewUser();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    public String processUpdate(String[] updateMessage, int primaryServer) throws RemoteException {
+        ServerInterface stub = locateServer(primaryServer);
+        if (stub != null) {
+            qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateMessage, UUID.randomUUID().toString()));
+            return "Update Processed For Replica Manager " + primaryServer;
+
+        }
+        return "Couldn't Find Server";
+    }
+
+    @Override
+    public void processUpdates(int[] servers, String[] updateOperations) throws RemoteException {
+        String uniqueID = UUID.randomUUID().toString();
+        for (int server : servers) {
+            ServerInterface stub = locateServer(server);
+            if (stub != null) {
+                qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateOperations, uniqueID));
+                System.out.println("Update Processed At Replica" + server + "");
+            }
+        }
+    }
+
+    @Override
+    public ServerStatus getServerStatus(int serverNumber) {
+        ServerInterface stub = locateServer(serverNumber);
+        if (stub != null) {
+            try {
+                return stub.getServerStatus();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String setServerStatus(int serverNumber, ServerStatus status) {
+        ServerInterface stub = locateServer(serverNumber);
+        if (stub != null) {
+            try {
+                stub.setServerStatus(status);
+                return "Replica Manager" + serverNumber + " Set Status to: " + stub.getServerStatus();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return "Couldn't Find Server";
+    }
+
+    //   Finding Stub Methods
+    /*
+    Check the primary stub to perform actions, if it is not available call reroute method.
+     */
+    private ServerInterface locateServer(int serverNumber) {
+        try {
+            Registry registry = LocateRegistry.getRegistry("localhost", 8000);
+            return (ServerInterface) registry.lookup("Server" + serverNumber);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    
+    //    Testing Methods
+    @Override
+    public String getTimeStamps(int serverNumber) throws RemoteException {
+        ServerInterface stub = locateServer(serverNumber);
+        if (stub != null) {
+            return stub.getTimeStamps();
+        }
+        return "Couldn't Find Replica" + serverNumber;
+    }
 
     public static void main(String[] args) {
         try {
@@ -27,141 +133,5 @@ public class FrontEnd implements FrontEndInterface {
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();
         }
-    }
-
-    public String sayHello() {
-        return "Front End Successfully Connected to Client!";
-    }
-
-    @Override
-    public String processQuery(String[] operations) {
-        ServerInterface stub = locateStub(primaryStub);
-        if (stub != null) {
-            try {
-                QueryPackage queryResponse = stub.processQuery(qPrev, operations);
-                qPrev = queryResponse.timeStamp;
-                return queryResponse.message;
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return "Couldn't Find Server";
-    }
-
-    @Override
-    public int createNewUser() throws RemoteException {
-        ServerInterface stub = locateStub(primaryStub);
-        if (stub != null) {
-            try {
-                return stub.createNewUser();
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return -1;
-    }
-
-    @Override
-    public String processUpdate(String[] updateMessage) throws RemoteException {
-        ServerInterface stub = locateStub(primaryStub);
-        if (stub != null) {
-            qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateMessage, UUID.randomUUID().toString()));
-            return "Update Processed For Replica Manager " + primaryStub;
-
-        }
-        return "Couldn't Find Server";
-    }
-
-    @Override
-    public void processUpdates(int[] servers, String[] updateOperations) throws RemoteException {
-        String uniqueID = UUID.randomUUID().toString();
-        for (int server : servers) {
-            ServerInterface stub = locateStub(server);
-            if (stub != null) {
-                qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateOperations, uniqueID));
-                System.out.println("Update Processed At Replica" + server + "");
-            }
-        }
-    }
-
-    @Override
-    public String getServerStatus(int serverNumber) {
-        ServerInterface stub = locateStub(serverNumber);
-        if (stub != null) {
-            try {
-                return "Replica Manager" + serverNumber + " Status: " + stub.getServerStatus();
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return "Couldn't Find Server";
-    }
-
-    @Override
-    public String setServerStatus(int serverNumber, ServerStatus status) {
-        ServerInterface stub = locateStub(serverNumber);
-        if (stub != null) {
-            try {
-                stub.setServerStatus(status);
-                return "Replica Manager" + serverNumber + " Set Status to: " + stub.getServerStatus();
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return "Couldn't Find Server";
-    }
-
-    @Override
-    public void setPrimaryServer(int serverNumber) throws RemoteException {
-        primaryStub = serverNumber;
-    }
-
-    //   Finding Stub Methods
-    /*
-    Check the primary stub to perform actions, if it is not available call reroute method.
-     */
-    private ServerInterface locateStub(int serverNumber) {
-        try {
-            Registry registry = LocateRegistry.getRegistry("localhost", 8000);
-            ServerInterface stub = (ServerInterface) registry.lookup("Server" + serverNumber);
-            if (stub.getServerStatus() != ServerStatus.ACTIVE) {
-                rerouteStub(registry, stub);
-            }
-            return stub;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    //    Testing Methods
-
-    /*
-    Checks all the servers till you find an available server
-     */
-    private void rerouteStub(Registry registry, ServerInterface stub) {
-        try {
-            while (stub.getServerStatus() != ServerStatus.ACTIVE) {
-                for (int i = 0; i < PublicInformation.numServers; i++) {
-                    stub = (ServerInterface) registry.lookup("Server" + i);
-                    if (stub.getServerStatus() == ServerStatus.ACTIVE) {
-                        primaryStub = i;
-                        System.out.println("Rerouted Stub to: " + primaryStub);
-                        break;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public String getTimeStamps(int serverNumber) throws RemoteException {
-        ServerInterface stub = locateStub(serverNumber);
-        if (stub != null) {
-            return stub.getTimeStamps();
-        }
-        return "Couldn't Find Replica" + serverNumber;
     }
 }

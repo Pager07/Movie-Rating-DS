@@ -2,14 +2,20 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
 public class Client {
-    // TODO: 23/02/2019 Adding an update to client
-    private static String userID;
+    // TODO: 2019-02-25 Add Server Status to Servers (maximum of 1 person per server) 
+    // TODO: 2019-02-25 Add Shut Down Protocol
 
+    /*
+    Situations To Deal With:
+     - Client Fails
+     - Server Fails
+     */
+    private static String userID;
+    private static int primaryServer;
     public static void main(String[] args) {
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 8000);
@@ -23,10 +29,11 @@ public class Client {
             Scanner scanner = new Scanner(System.in);
             getUserID(scanner, frontEnd);
             while (isClientConnected) {
+                findAvailableService(frontEnd, registry);
                 System.out.println("What Operations Would You Like To Perform: ");
                 String response = scanner.nextLine().toLowerCase();
                 if (response.matches("update")) {
-                    System.out.println("Server: " + frontEnd.processUpdate(processUpdate(scanner)));
+                    System.out.println("Server: " + frontEnd.processUpdate(processUpdate(scanner), primaryServer));
                 } else if (response.matches("updates")) {
                     System.out.println("To Which Servers?");
                     String[] userServers = scanner.nextLine().replaceAll("\\s+", "").split(",");
@@ -39,7 +46,7 @@ public class Client {
                     System.out.println("Which Server");
                     System.out.println(frontEnd.getTimeStamps(Integer.parseInt(scanner.nextLine())));
                 } else if (response.matches("query")) {
-                    System.out.println(frontEnd.processQuery(processQuery(scanner)));
+                    System.out.println(frontEnd.processQuery(processQuery(scanner), primaryServer));
                 } else if (response.matches("getstatus")) {
                     System.out.println("Which Server?");
                     int serverNum = Integer.parseInt(scanner.nextLine());
@@ -50,10 +57,8 @@ public class Client {
                     ServerStatus status = setServerStatus(scanner);
                     System.out.println("Server: " + frontEnd.setServerStatus(serverNum, status));
                 } else if (response.matches("switch")) {
-                    System.out.println("Which Server?");
-                    int serverNum = Integer.parseInt(scanner.nextLine());
-                    System.out.println(Arrays.toString(registry.list()));
-                    frontEnd.setPrimaryServer(serverNum);
+                    System.out.println("Which Server?: 0 to " + (registry.list().length - 2));
+                    primaryServer = Integer.parseInt(scanner.nextLine());
                 } else {
                     isClientConnected = false;
                     int length = registry.list().length - 1;
@@ -90,7 +95,7 @@ public class Client {
         String response = scanner.nextLine().toLowerCase().trim();
         if (response.matches("no")) {
             try {
-                userID = Integer.toString(frontEnd.createNewUser());
+                userID = Integer.toString(frontEnd.createNewUser(primaryServer));
             } catch (RemoteException e) {
                 e.printStackTrace();
                 userID = Integer.toString(new Random().nextInt(249) + 1);
@@ -98,7 +103,7 @@ public class Client {
         } else {
             userID = Integer.toString(new Random().nextInt(249) + 1);
         }
-        System.out.println("Assigned User ID: " + userID);
+        System.out.println("User ID: " + userID);
     }
 
     //    Update Methods
@@ -108,12 +113,12 @@ public class Client {
         System.out.println("addReview: Adds review of a movie to database");
         String response = scanner.nextLine().toLowerCase();
         if (response.matches("addmovie")) return addMovie(scanner);
-        else return createRating(scanner);
+        else return createRating(scanner, userID);
     }
 
     //    Review will be sent as a [userID, movieName, review]
 //    length 4 because it makes it easier to add movie (by distinguishing what operations to do)
-    private static String[] createRating(Scanner scanner) {
+    private static String[] createRating(Scanner scanner, String userID) {
         String[] review = new String[3];
         review[0] = userID;
         System.out.println("What Movie Would You Like To Review");
@@ -174,6 +179,19 @@ public class Client {
             answer[1] = scanner.nextLine();
             return answer;
         }
+    }
+
+    private static void findAvailableService(FrontEndInterface frontEnd, Registry registry) throws RemoteException {
+        if (frontEnd.getServerStatus(primaryServer) != ServerStatus.ACTIVE) {
+            for (int i = 0; i < registry.list().length - 1; i++) {
+                if (frontEnd.getServerStatus(i) == ServerStatus.ACTIVE) {
+                    primaryServer = i;
+                    System.out.println("Switched Server to Server" + primaryServer);
+                    break;
+                }
+            }
+        }
+
     }
 
 }
