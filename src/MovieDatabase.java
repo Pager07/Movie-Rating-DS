@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class MovieDatabase {
     private HashMap<Integer, MovieRecord> movieDatabase;
     private HashMap<Integer, MovieRating> movieRating;
-//    Keep This in for now, maybe in the future experiment with making the Keys the name of the Movie.
+    //    Keep This in for now, maybe in the future experiment with making the Keys the name of the Movie.
     private HashMap<String, Integer> movieIDs;
     private HashMap<Integer, UserRatingManager> userRatings;
 
@@ -22,7 +22,7 @@ public class MovieDatabase {
         return userRatings.size() + 1;
     }
 
-//    Purpose: main method that Server calls to query database
+    //    Purpose: main method that Server calls to query database
     public String queryDatabase(String[] queryOperations) {
         if (queryOperations.length == 2) {
             return getUserRatings(Integer.parseInt(queryOperations[0]));
@@ -31,8 +31,8 @@ public class MovieDatabase {
 
     }
 
-//    Purpose: Find All Information of Specific Movie
-    private String findMovie(String movieName){
+    //    Purpose: Find All Information of Specific Movie
+    private String findMovie(String movieName) {
         if (!movieIDs.containsKey(movieName)) return "Movie Not Found";
         int movieID = movieIDs.get(movieName);
         StringBuilder builder = new StringBuilder();
@@ -46,20 +46,20 @@ public class MovieDatabase {
         return builder.toString();
     }
 
-//    Purpose: get all ratings that was sent in by the user
+    //    Purpose: get all ratings that was sent in by the user
     private String getUserRatings(int userID) {
         if (!userRatings.containsKey(userID)) return "User Contains No Reviews";
         return userRatings.get(userID).toString();
     }
 
 
-// TODO: 24/02/2019 On Shutdown, get servers to gossip
+    // TODO: 24/02/2019 On Shutdown, get servers to gossip
     public void shutDownServer() {
         saveDatabase();
         saveRatings();
     }
 
-//    When Servers Close Down and To Save State of Machine
+    //    When Servers Close Down and To Save State of Machine
     private void saveDatabase() {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(getFile("movies")));
@@ -68,7 +68,8 @@ public class MovieDatabase {
                 System.out.println(record);
                 writer.write(key + "," + record.movieName + " (" + record.year + "),");
                 StringBuilder genre = new StringBuilder();
-                if (record.genres[0].matches("no genres listed")) genre = new StringBuilder("(" + record.genres[0] + ")");
+                if (record.genres[0].matches("no genres listed"))
+                    genre = new StringBuilder("(" + record.genres[0] + ")");
                 else {
                     for (String recordedGenre : record.genres) {
                         genre.append(recordedGenre).append("|");
@@ -98,15 +99,17 @@ public class MovieDatabase {
         }
     }
 
-//    Adding to Database Methods
-//    Purpose: Generate uniqueID that doesn't exist in the database
-    public int generateUniqueUserID(){
-        return userRatings.size();
-    }
 
-
-    public void addMovie(String movieName, String genres) {
-
+    /*
+        - Check if movie name exists in the ID
+        - Generate Unique ID for Movie
+        - Add Movie To Database
+        - Add MovieName, MovieID to movieIDs
+     */
+    public String addMovie(String movieName, String year, String genres) {
+        if (movieIDs.containsKey(movieName)) return "Movie Already Exists in Database";
+//        Generate Unique ID
+        int uniqueID = 
     }
 
     public void addUserRating(int userID, int movieID, float rating) {
@@ -117,13 +120,13 @@ public class MovieDatabase {
         userRatings.get(userID).removeRating(movieID);
     }
 
-//    Fill MovieDatabase Methods
+    //    Fill MovieDatabase Methods
 /*
     Put MovieRecord(movieName, year, genres) in movieDatabase as key movieID
     Put movieID as key movieName and value movieID
     Goal: split the line into an String[4] = [movieID, movieName, movieYear, movieGenres]
  */
-    private void fillMovieDatabase(){
+    private void fillMovieDatabase() {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(getFile("movies")));
             String line;
@@ -147,7 +150,7 @@ public class MovieDatabase {
     private void removeYear(String processedString, String[] elements) {
         String[] components = processedString.split("\\(");
         for (int i = 0; i < components.length - 1; i++) {
-            if (i == 0 ) elements[1] = components[i];
+            if (i == 0) elements[1] = components[i];
             else elements[1] += '(' + components[i];
         }
         elements[1] = elements[1].substring(0, elements[1].length() - 1);
@@ -155,13 +158,13 @@ public class MovieDatabase {
     }
 
 
-//    Get Ratings Method
+    //    Get Ratings Method
 //    userID, movieID, rating, timeStamp
     private void fillRating() {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(getFile("ratings")));
             String line;
-            while( (line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 String[] components = line.split(",");
                 int userID = Integer.parseInt(components[0]), movieID = Integer.parseInt(components[1]), time = Integer.parseInt(components[3]);
                 float rating = Float.parseFloat(components[2]);
@@ -182,13 +185,14 @@ public class MovieDatabase {
     }
 
 
-//    Universal Methods
+    //    Universal Methods
     private File getFile(String fileName) {
-        File file =  new File(System.getProperty("user.dir") + "/Movie Database/" + fileName + ".csv");
+        File file = new File(System.getProperty("user.dir") + "/Movie Database/" + fileName + ".csv");
         try {
             file.createNewFile();
         } catch (IOException e) {
-            e.printStackTrace();;
+            e.printStackTrace();
+            ;
         }
         return file;
     }
@@ -205,9 +209,8 @@ public class MovieDatabase {
 
         private void getGenres(String genres) {
             if (genres.contains("(")) {
-                this.genres = new String[] {genres.substring(1, genres.length() - 1)};
-            }
-            else {
+                this.genres = new String[]{genres.substring(1, genres.length() - 1)};
+            } else {
                 this.genres = genres.split(",");
             }
         }
@@ -236,7 +239,6 @@ public class MovieDatabase {
             return sum / ratings;
         }
     }
-
 
 
 }

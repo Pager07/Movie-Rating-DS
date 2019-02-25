@@ -5,24 +5,24 @@ import java.util.Objects;
 public class TimeStamp implements Serializable {
     private ArrayList<Integer> vector;
 
-    TimeStamp(int size){
+    TimeStamp(int size) {
         vector = new ArrayList<>();
-        for (int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             vector.add(0);
         }
     }
 
 
-//    Perform Component Wise Maximum (<2, 1, 1> and <1, 3, 1> should become <2,3,1>)
-void combineTimeStamps(TimeStamp otherTimeStamp) {
+    //    Perform Component Wise Maximum (<2, 1, 1> and <1, 3, 1> should become <2,3,1>)
+    void combineTimeStamps(TimeStamp otherTimeStamp) {
         for (int i = 0; i < vector.size(); i++) {
             vector.set(i, otherTimeStamp.vector.get(i) > vector.get(i) ? otherTimeStamp.vector.get(i) : vector.get(i));
         }
     }
 
 
-//    Get the unique ID of an update from both timestamps (it is the current timestamp with the ith element from valueTS)
-TimeStamp getUniqueID(TimeStamp valueTS, int replicaNumber) {
+    //    Get the unique ID of an update from both timestamps (it is the current timestamp with the ith element from valueTS)
+    TimeStamp getUniqueID(TimeStamp valueTS, int replicaNumber) {
         TimeStamp uniqueID = new TimeStamp(PublicInformation.numServers);
         for (int i = 0; i < valueTS.vector.size(); i++) {
             uniqueID.vector.set(i, vector.get(i));

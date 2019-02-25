@@ -2,18 +2,19 @@ import java.io.Serializable;
 import java.util.*;
 
 public class UpdateManager implements Serializable {
-    private int replicaNumber;
-//    Contains the timestamps of other RMs. Updated whenever you obtain a gossip message.
+    //    Contains the timestamps of other RMs. Updated whenever you obtain a gossip message.
     public HashMap<Integer, TimeStamp> timeStampTable;
-//    Contains the unique front end identifier of ID (thus all we need to do is check the uID of an update)
-    private HashSet<String> executedOperationTable;
     public ArrayList<UpdateLogRecord> updateLog;
     public ArrayList<String[]> updates;
+    private int replicaNumber;
+    //    Contains the unique front end identifier of ID (thus all we need to do is check the uID of an update)
+    private HashSet<String> executedOperationTable;
 
-    public UpdateManager(int replicaNumber){
+    public UpdateManager(int replicaNumber) {
         this.replicaNumber = replicaNumber;
         timeStampTable = new HashMap<>();
-        for (int i = 0; i < PublicInformation.numServers; i++) timeStampTable.put(i, new TimeStamp(PublicInformation.numServers));
+        for (int i = 0; i < PublicInformation.numServers; i++)
+            timeStampTable.put(i, new TimeStamp(PublicInformation.numServers));
         executedOperationTable = new HashSet<>();
         updateLog = new ArrayList<>();
         updates = new ArrayList<>();
@@ -23,7 +24,7 @@ public class UpdateManager implements Serializable {
     /*
     Returns true if we can merge valueTS with ts (which signifies that update can be applied)
      */
-    public boolean addToLog(TimeStamp ts, TimeStamp qPrev, String frontEndIdentifier, String[] operations){
+    public boolean addToLog(TimeStamp ts, TimeStamp qPrev, String frontEndIdentifier, String[] operations) {
         updateLog.add(new UpdateLogRecord(replicaNumber, ts, qPrev, frontEndIdentifier, operations));
         if (qPrev.isLessThan(ts)) {
 //            apply update
@@ -37,8 +38,8 @@ public class UpdateManager implements Serializable {
     }
 
 
-//  checks if the String uid is in the executedOperations table.
-    public boolean inLog(String uid){
+    //  checks if the String uid is in the executedOperations table.
+    public boolean inLog(String uid) {
         return executedOperationTable.contains(uid);
     }
 
@@ -46,8 +47,8 @@ public class UpdateManager implements Serializable {
         System.out.println("Going Through Sent Log:");
 //        Going through and adding to own log
         for (UpdateLogRecord record : sentLog) {
-            System.out.println(replicaTS + ", " + record.ts  + " " + replicaTS.isLessThan(record.ts));
-            if(replicaTS.isLessThan(record.ts) && !inLog(record.frontEndIdentifier)) {
+            System.out.println(replicaTS + ", " + record.ts + " " + replicaTS.isLessThan(record.ts));
+            if (replicaTS.isLessThan(record.ts) && !inLog(record.frontEndIdentifier)) {
                 updateLog.add(record);
                 valueTS.incrementFrontEnd(record.replicaNumber);
                 System.out.println("Added Record to Own Log: " + record);

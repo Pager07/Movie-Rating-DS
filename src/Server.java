@@ -4,8 +4,8 @@ import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Server implements ServerInterface{
-//    ValueTS: Contains all updates that have been applied (applied by RM)
+public class Server implements ServerInterface {
+    //    ValueTS: Contains all updates that have been applied (applied by RM)
 //    replicaTS: Contains all updates that have been accepted by RM (keeps track of all the other updates from Gossip)
     private TimeStamp valueTS, replicaTS;
     private ServerStatus status = ServerStatus.ACTIVE;
@@ -13,7 +13,7 @@ public class Server implements ServerInterface{
     private UpdateManager updateManager;
     private MovieDatabase database;
 
-    public Server(int number, int numServers){
+    public Server(int number, int numServers) {
         this.number = number;
         valueTS = new TimeStamp(numServers);
         replicaTS = new TimeStamp(numServers);
@@ -33,7 +33,6 @@ public class Server implements ServerInterface{
     @Override
     public TimeStamp processUpdate(TimeStamp qPrev, String[] operations, String frontEndIdentifier) {
         if (updateManager.inLog(frontEndIdentifier)) return qPrev;
-        System.out.println("Replica" + number + ": " + valueTS);
 //        Increment Time Stamps as update is valid
         replicaTS.incrementFrontEnd(number);
         valueTS.incrementFrontEnd(number);
@@ -61,10 +60,10 @@ public class Server implements ServerInterface{
     }
 
     @Override
-    public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber){
+    public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber) {
         System.out.println("Processing Gossip at Replica" + number);
         updateManager.processGossip(log, senderTimeStamp, replicaTS, valueTS, senderNumber);
-        System.out.println("Updates at Replica" + number  + ": " + Arrays.toString(updateManager.updates.toArray()));
+        System.out.println("Updates at Replica" + number + ": " + Arrays.toString(updateManager.updates.toArray()));
         System.out.println("^^^^^^^^^^^^^^^^\n");
         valueTS = updateManager.timeStampTable.get(number);
         try {
@@ -90,7 +89,7 @@ public class Server implements ServerInterface{
                     stub.processGossip(updateManager.updateLog, valueTS, number);
                 }
             }
-        } catch (Exception e ) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -100,12 +99,12 @@ public class Server implements ServerInterface{
         return database.createNewUser();
     }
 
-    private void processUpdate(String[] operations){
+    private void processUpdate(String[] operations) {
         if (operations.length == 2) {
 //            remove Review
         } else if (operations.length == 3) {
 //            adding Movie
-
+            database.addMovie(operations);
         } else {
 //            adding Review
         }

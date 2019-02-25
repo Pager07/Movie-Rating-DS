@@ -5,17 +5,36 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.UUID;
 
 
-public class FrontEnd implements FrontEndInterface{
+public class FrontEnd implements FrontEndInterface {
     private TimeStamp qPrev = new TimeStamp(PublicInformation.numServers);
     private int primaryStub = 0;
 
-    public String sayHello(){
+    public static void main(String[] args) {
+        try {
+            // Create server object
+            FrontEnd obj = new FrontEnd();
+
+            // Create remote object stub from server object
+            FrontEndInterface stub = (FrontEndInterface) UnicastRemoteObject.exportObject(obj, 0);
+            // Get registry
+            Registry registry = LocateRegistry.getRegistry("localhost", 8000);
+            // Bind the remote object's stub in the registry
+            registry.bind("FrontEnd", stub);
+
+            // Write ready message to console
+            System.out.println("Front End ready");
+        } catch (Exception e) {
+            System.err.println("Server exception: " + e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    public String sayHello() {
         return "Front End Successfully Connected to Client!";
     }
 
-
     @Override
-    public String processQuery(String[] operations){
+    public String processQuery(String[] operations) {
         ServerInterface stub = locateStub(primaryStub);
         if (stub != null) {
             try {
@@ -42,9 +61,8 @@ public class FrontEnd implements FrontEndInterface{
         return -1;
     }
 
-
     @Override
-    public String processUpdate(String[] updateMessage) throws RemoteException{
+    public String processUpdate(String[] updateMessage) throws RemoteException {
         ServerInterface stub = locateStub(primaryStub);
         if (stub != null) {
             qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateMessage, UUID.randomUUID().toString()));
@@ -93,14 +111,10 @@ public class FrontEnd implements FrontEndInterface{
         return "Couldn't Find Server";
     }
 
-
     @Override
     public void setPrimaryServer(int serverNumber) throws RemoteException {
         primaryStub = serverNumber;
     }
-
-
-
 
     //   Finding Stub Methods
     /*
@@ -109,17 +123,18 @@ public class FrontEnd implements FrontEndInterface{
     private ServerInterface locateStub(int serverNumber) {
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 8000);
-            ServerInterface stub =  (ServerInterface) registry.lookup("Server" + serverNumber);
+            ServerInterface stub = (ServerInterface) registry.lookup("Server" + serverNumber);
             if (stub.getServerStatus() != ServerStatus.ACTIVE) {
                 rerouteStub(registry, stub);
             }
             return stub;
-        } catch (Exception e ) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
+    //    Testing Methods
 
     /*
     Checks all the servers till you find an available server
@@ -141,9 +156,6 @@ public class FrontEnd implements FrontEndInterface{
         }
     }
 
-    //    Testing Methods
-
-
     @Override
     public String getTimeStamps(int serverNumber) throws RemoteException {
         ServerInterface stub = locateStub(serverNumber);
@@ -151,25 +163,5 @@ public class FrontEnd implements FrontEndInterface{
             return stub.getTimeStamps();
         }
         return "Couldn't Find Replica" + serverNumber;
-    }
-
-    public static void main(String[] args) {
-        try {
-            // Create server object
-            FrontEnd obj = new FrontEnd();
-
-            // Create remote object stub from server object
-            FrontEndInterface stub = (FrontEndInterface) UnicastRemoteObject.exportObject(obj, 0);
-            // Get registry
-            Registry registry = LocateRegistry.getRegistry("localhost", 8000);
-            // Bind the remote object's stub in the registry
-            registry.bind("FrontEnd", stub);
-
-            // Write ready message to console
-            System.out.println("Front End ready");
-        } catch (Exception e) {
-            System.err.println("Server exception: " + e.toString());
-            e.printStackTrace();
-        }
     }
 }

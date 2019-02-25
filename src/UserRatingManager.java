@@ -10,7 +10,7 @@ public class UserRatingManager {
     }
 
 
-//  Behaviour: The linkedlist is sorted such that those with a smaller movieID comes first
+    //  Behaviour: The linkedlist is sorted such that those with a smaller movieID comes first
 //  To Add To Linked List: Iterate through the LinkedList till you find that the current movieID you are trying to add
 //                          is less than the current movie ID. If the movieID is the same then the user must be editting
 //                           old ID. Else add it to the back of the linked list.
@@ -28,7 +28,7 @@ public class UserRatingManager {
         ratings.addLast(new UserRatings(movieName, movieID, rating));
     }
 
-//    Iterate through Linked list till you find the same movieID in the list then return.
+    //    Iterate through Linked list till you find the same movieID in the list then return.
     public void removeRating(int movieID) {
         for (int i = 0; i < ratings.size(); i++) {
             if (ratings.get(i).movieID == movieID) {
@@ -48,7 +48,7 @@ public class UserRatingManager {
     }
 
     //    userID, movieID, rating, timeStamp
-    public String toString(){
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < ratings.size(); i++) {
             builder.append(ratings.get(i).toString()).append("\n");
@@ -61,7 +61,7 @@ public class UserRatingManager {
         private int movieID;
         private float rating;
 
-        private UserRatings(String movieName, int movieID,  float rating) {
+        private UserRatings(String movieName, int movieID, float rating) {
             this.movieName = movieName;
             this.movieID = movieID;
             this.rating = rating;

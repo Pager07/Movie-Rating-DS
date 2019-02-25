@@ -16,7 +16,7 @@ public class UpdateLogRecord implements Serializable {
 
     @Override
     public String toString() {
-        return "{" + ts + ", " + qPrev + ", "+ operations +
+        return "{" + ts + ", " + qPrev + ", " + operations +
                 ", " + frontEndIdentifier + ", " + replicaNumber + '}';
     }
 }

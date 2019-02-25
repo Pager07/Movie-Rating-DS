@@ -1,7 +1,7 @@
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface FrontEndInterface extends Remote{
+public interface FrontEndInterface extends Remote {
     public String sayHello() throws RemoteException;
 
     public String processQuery(String[] operations) throws RemoteException;
