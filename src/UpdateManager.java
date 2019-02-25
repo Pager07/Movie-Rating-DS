@@ -45,22 +45,17 @@ public class UpdateManager implements Serializable {
     }
 
     public void processGossip(ArrayList<UpdateLogRecord> sentLog, TimeStamp senderTS, TimeStamp replicaTS, TimeStamp valueTS, int senderNumber) {
-        System.out.println("Going Through Sent Log:");
 //        Going through and adding to own log
         for (UpdateLogRecord record : sentLog) {
-            System.out.println(replicaTS + ", " + record.ts + " " + replicaTS.isLessThan(record.ts));
             if (replicaTS.isLessThan(record.ts) && !inLog(record.frontEndIdentifier)) {
                 updateLog.add(record);
                 valueTS.incrementFrontEnd(record.replicaNumber);
-                System.out.println("Added Record to Own Log: " + record);
             }
         }
 //        Merging The Time Stamps
         replicaTS.combineTimeStamps(senderTS);
         timeStampTable.put(replicaNumber, replicaTS);
-        System.out.println("\nApplying Updates");
         applyUpdates();
-        System.out.println("\nDiscarding Old Logs");
         discardOldLogs(senderTS, senderNumber);
     }
 
@@ -84,7 +79,6 @@ public class UpdateManager implements Serializable {
         for (UpdateLogRecord record : stableUpdates) {
             movieDatabase.processUpdate(record.operations);
             executedOperationTable.add(record.frontEndIdentifier);
-            System.out.println("Added To Updates: " + Arrays.toString(record.operations));
         }
     }
 
@@ -102,7 +96,6 @@ public class UpdateManager implements Serializable {
             if (notProcessedEverywhere) unapprovedUpdates.add(record);
         }
         updateLog = unapprovedUpdates;
-        System.out.println("Final Update Log: " + Arrays.toString(updateLog.toArray()) + "\n");
     }
 
 

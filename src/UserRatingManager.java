@@ -21,13 +21,13 @@ public class UserRatingManager {
         ratings.addLast(new UserRatings(movieName, movieID, rating));
     }
 
-    public String getUserRatingFor(int movieID) {
+    public String getUserRatingFor(int movieID, String movieName) {
         for (int i = 0; i < ratings.size(); i++) {
             if (ratings.get(i).movieID == movieID) {
                 return Float.toString(ratings.get(i).rating);
             }
         }
-        return "User has no review for " + movieID;
+        return "User has no review for " + movieName;
     }
 
     //    userID, movieID, rating, timeStamp

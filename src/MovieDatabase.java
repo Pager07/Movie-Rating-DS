@@ -33,7 +33,7 @@ public class MovieDatabase {
 //            Get Specific Review For Client
             if (!movieIDs.containsKey(queryOperations[1])) return "No Review Exists";
             int movieID = movieIDs.get(queryOperations[1]), userID = Integer.parseInt(queryOperations[0]);
-            return userRatings.get(userID).getUserRatingFor(movieID);
+            return userRatings.get(userID).getUserRatingFor(movieID, queryOperations[1]);
         }
         return findMovie(queryOperations[0]);
 

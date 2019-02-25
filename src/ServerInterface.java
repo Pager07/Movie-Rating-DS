@@ -1,5 +1,6 @@
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
 import java.util.ArrayList;
 
 public interface ServerInterface extends Remote {
@@ -19,6 +20,8 @@ public interface ServerInterface extends Remote {
     public String getReplicaTS() throws RemoteException;
 
     public String getTimeStamps() throws RemoteException;
+
+    public void sendGossip(ServerInterface requestingServer) throws RemoteException;
 
     public int createNewUser() throws RemoteException;
 }

@@ -2,41 +2,52 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Server implements ServerInterface {
     //    ValueTS: Contains all updates that have been applied (applied by RM)
 //    replicaTS: Contains all updates that have been accepted by RM (keeps track of all the other updates from Gossip)
     private TimeStamp valueTS, replicaTS;
     private ServerStatus status = ServerStatus.ACTIVE;
-    private int number, updates = 0;
+    private int serverNumber, updates = 0;
     private UpdateManager updateManager;
     private MovieDatabase database;
 
-    public Server(int number, int numServers) {
-        this.number = number;
+    public Server(int serverNumber, int numServers) {
+        this.serverNumber = serverNumber;
         valueTS = new TimeStamp(numServers);
         replicaTS = new TimeStamp(numServers);
         database = new MovieDatabase();
-        updateManager = new UpdateManager(number, database);
+        updateManager = new UpdateManager(serverNumber, database);
     }
 
     @Override
     public QueryPackage processQuery(TimeStamp qPrev, String[] queryOperations) {
 //       if valueTS < q.prev then the replica manager is missing some updates.
-        if (qPrev.isLessThan(valueTS)) {
-            return new QueryPackage(replicaTS, database.queryDatabase(queryOperations));
+        if (!qPrev.isLessThan(valueTS)) {
+            System.out.println("Current Server" + serverNumber + " Behind Front End");
+            try {
+                Registry registry = LocateRegistry.getRegistry("localhost", 8000);
+                for (int i = 0; i < registry.list().length - 1; i++) {
+                    if (i != serverNumber) {
+                        ServerInterface server = (ServerInterface) registry.lookup("Server" + i);
+                        server.sendGossip(this);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            System.out.println("Processed Gossip");
         }
-        return new QueryPackage(replicaTS, "Replica Manager " + number + " can't process query");
+        return new QueryPackage(replicaTS, database.queryDatabase(queryOperations));
     }
 
     @Override
     public TimeStamp processUpdate(TimeStamp qPrev, String[] operations, String frontEndIdentifier) {
         if (updateManager.inLog(frontEndIdentifier)) return qPrev;
 //        Increment Time Stamps as update is valid
-        replicaTS.incrementFrontEnd(number);
-        valueTS.incrementFrontEnd(number);
-        TimeStamp ts = qPrev.getUniqueID(replicaTS, number);
+        replicaTS.incrementFrontEnd(serverNumber);
+        valueTS.incrementFrontEnd(serverNumber);
+        TimeStamp ts = qPrev.getUniqueID(replicaTS, serverNumber);
         if (updateManager.addToLog(ts, qPrev, frontEndIdentifier, operations)) {
             replicaTS.combineTimeStamps(ts);
         }
@@ -48,6 +59,7 @@ public class Server implements ServerInterface {
         }
         return ts;
     }
+    
 
     @Override
     public ServerStatus getServerStatus() {
@@ -61,31 +73,30 @@ public class Server implements ServerInterface {
 
     @Override
     public void processGossip(ArrayList<UpdateLogRecord> log, TimeStamp senderTimeStamp, int senderNumber) {
-        System.out.println("Processing Gossip at Replica" + number);
         updateManager.processGossip(log, senderTimeStamp, replicaTS, valueTS, senderNumber);
-        System.out.println("^^^^^^^^^^^^^^^^\n");
-        valueTS = updateManager.timeStampTable.get(number);
+        valueTS = updateManager.timeStampTable.get(serverNumber);
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 8000);
-            System.out.println("---------------------------------------------------------------------------");
             for (int i = 0; i < registry.list().length - 1; i++) {
                 ServerInterface stub = (ServerInterface) registry.lookup("Server" + i);
-                System.out.println("Replica" + i + " ValueTS:   " + stub.getValueTS());
-                System.out.println("Replica" + i + " ReplicaTS: " + stub.getReplicaTS());
             }
-            System.out.println("---------------------------------------------------------------------------\n\n");
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void sendGossip(ServerInterface requestingServer) throws RemoteException {
+        requestingServer.processGossip(updateManager.updateLog, replicaTS, serverNumber);
     }
 
     private void gossip() {
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 8000);
             for (int i = 0; i < registry.list().length - 1; i++) {
-                if (i != number) {
+                if (i != serverNumber) {
                     ServerInterface stub = (ServerInterface) registry.lookup("Server" + i);
-                    stub.processGossip(updateManager.updateLog, valueTS, number);
+                    stub.processGossip(updateManager.updateLog, valueTS, serverNumber);
                 }
             }
         } catch (Exception e) {
@@ -96,17 +107,6 @@ public class Server implements ServerInterface {
     @Override
     public int createNewUser() throws RemoteException {
         return database.createNewUser();
-    }
-
-    private void processUpdate(String[] operations) {
-        if (operations.length == 2) {
-//            remove Review
-        } else if (operations.length == 3) {
-//            adding Movie
-            database.addMovie(operations[0], operations[1], operations[2]);
-        } else {
-//            adding Review
-        }
     }
 
     //    Testing Methods
@@ -124,25 +124,4 @@ public class Server implements ServerInterface {
     public String getTimeStamps() throws RemoteException {
         return "ValueTS: " + valueTS.toString() + "\nReplicaTS: " + replicaTS.toString();
     }
-
-    //    public static void main(String[] args) {
-//        try {
-//            // Create server object
-//            Server obj = new Server(5, PublicInformation.numServers);
-//
-//            // Create remote object stub from server object
-//            ServerInterface stub = (ServerInterface) UnicastRemoteObject.exportObject(obj, 0);
-//            // Get registry
-//            Registry registry = LocateRegistry.getRegistry("localhost", 8000);
-//            // Bind the remote object's stub in the registry
-//            registry.bind("Server5", stub);
-//
-//            // Write ready message to console
-//            System.out.println("Server5 ready");
-//        } catch (Exception e) {
-//            System.err.println("Server exception: " + e.toString());
-//            e.printStackTrace();
-//        }
-//    }
-
 }
