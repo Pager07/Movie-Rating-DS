@@ -8,7 +8,7 @@ public class UpdateManager implements Serializable {
 //    Contains the unique front end identifier of ID (thus all we need to do is check the uID of an update)
     private HashSet<String> executedOperationTable;
     public ArrayList<UpdateLogRecord> updateLog;
-    public ArrayList<String> updates;
+    public ArrayList<String[]> updates;
 
     public UpdateManager(int replicaNumber){
         this.replicaNumber = replicaNumber;
@@ -23,7 +23,7 @@ public class UpdateManager implements Serializable {
     /*
     Returns true if we can merge valueTS with ts (which signifies that update can be applied)
      */
-    public boolean addToLog(TimeStamp ts, TimeStamp qPrev, String frontEndIdentifier, String operations){
+    public boolean addToLog(TimeStamp ts, TimeStamp qPrev, String frontEndIdentifier, String[] operations){
         updateLog.add(new UpdateLogRecord(replicaNumber, ts, qPrev, frontEndIdentifier, operations));
         if (qPrev.isLessThan(ts)) {
 //            apply update

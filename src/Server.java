@@ -22,17 +22,16 @@ public class Server implements ServerInterface{
     }
 
     @Override
-    public QueryPackage processQuery(TimeStamp qPrev, String movieName) {
+    public QueryPackage processQuery(TimeStamp qPrev, String[] queryOperations) {
 //       if valueTS < q.prev then the replica manager is missing some updates.
         if (qPrev.isLessThan(valueTS)) {
-            System.out.println("Movie Name: " + movieName);
-            return new QueryPackage(replicaTS, database.queryDatabase(movieName));
+            return new QueryPackage(replicaTS, database.queryDatabase(queryOperations));
         }
         return new QueryPackage(replicaTS, "Replica Manager " + number + " can't process query");
     }
 
     @Override
-    public TimeStamp processUpdate(TimeStamp qPrev, String operations, String frontEndIdentifier) {
+    public TimeStamp processUpdate(TimeStamp qPrev, String[] operations, String frontEndIdentifier) {
         if (updateManager.inLog(frontEndIdentifier)) return qPrev;
         System.out.println("Replica" + number + ": " + valueTS);
 //        Increment Time Stamps as update is valid
@@ -96,8 +95,23 @@ public class Server implements ServerInterface{
         }
     }
 
+    @Override
+    public int createNewUser() throws RemoteException {
+        return database.createNewUser();
+    }
 
-//    Testing Methods
+    private void processUpdate(String[] operations){
+        if (operations.length == 2) {
+//            remove Review
+        } else if (operations.length == 3) {
+//            adding Movie
+
+        } else {
+//            adding Review
+        }
+    }
+
+    //    Testing Methods
     @Override
     public String getUpdates() throws RemoteException {
         return Arrays.toString(updateManager.updates.toArray());

@@ -4,11 +4,11 @@ import java.rmi.RemoteException;
 public interface FrontEndInterface extends Remote{
     public String sayHello() throws RemoteException;
 
-    public String processQuery(String movieName) throws RemoteException;
+    public String processQuery(String[] operations) throws RemoteException;
 
-    public String processUpdate(String updateMessage) throws RemoteException;
+    public String processUpdate(String[] updateOperations) throws RemoteException;
 
-    public void processUpdates(int[] servers, String updateMessage) throws RemoteException;
+    public void processUpdates(int[] servers, String[] updateOperations) throws RemoteException;
 
     public String getServerStatus(int serverNumber) throws RemoteException;
 
@@ -18,4 +18,5 @@ public interface FrontEndInterface extends Remote{
 
     public String getTimeStamps(int serverNumber) throws RemoteException;
 
+    public int createNewUser() throws RemoteException;
 }

@@ -15,11 +15,11 @@ public class FrontEnd implements FrontEndInterface{
 
 
     @Override
-    public String processQuery(String movieName){
+    public String processQuery(String[] operations){
         ServerInterface stub = locateStub(primaryStub);
         if (stub != null) {
             try {
-                QueryPackage queryResponse = stub.processQuery(qPrev, movieName);
+                QueryPackage queryResponse = stub.processQuery(qPrev, operations);
                 qPrev = queryResponse.timeStamp;
                 return queryResponse.message;
             } catch (RemoteException e) {
@@ -30,7 +30,21 @@ public class FrontEnd implements FrontEndInterface{
     }
 
     @Override
-    public String processUpdate(String updateMessage) throws RemoteException{
+    public int createNewUser() throws RemoteException {
+        ServerInterface stub = locateStub(primaryStub);
+        if (stub != null) {
+            try {
+                return stub.createNewUser();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return -1;
+    }
+
+
+    @Override
+    public String processUpdate(String[] updateMessage) throws RemoteException{
         ServerInterface stub = locateStub(primaryStub);
         if (stub != null) {
             qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateMessage, UUID.randomUUID().toString()));
@@ -41,12 +55,12 @@ public class FrontEnd implements FrontEndInterface{
     }
 
     @Override
-    public void processUpdates(int[] servers, String updateMessage) throws RemoteException {
+    public void processUpdates(int[] servers, String[] updateOperations) throws RemoteException {
         String uniqueID = UUID.randomUUID().toString();
         for (int server : servers) {
             ServerInterface stub = locateStub(server);
             if (stub != null) {
-                qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateMessage, uniqueID));
+                qPrev.combineTimeStamps(stub.processUpdate(qPrev, updateOperations, uniqueID));
                 System.out.println("Update Processed At Replica" + server + "");
             }
         }
@@ -79,10 +93,13 @@ public class FrontEnd implements FrontEndInterface{
         return "Couldn't Find Server";
     }
 
+
     @Override
     public void setPrimaryServer(int serverNumber) throws RemoteException {
         primaryStub = serverNumber;
     }
+
+
 
 
     //   Finding Stub Methods
@@ -124,7 +141,7 @@ public class FrontEnd implements FrontEndInterface{
         }
     }
 
-//    Testing Methods
+    //    Testing Methods
 
 
     @Override

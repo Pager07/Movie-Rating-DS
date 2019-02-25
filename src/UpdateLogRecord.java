@@ -2,10 +2,11 @@ import java.io.Serializable;
 
 public class UpdateLogRecord implements Serializable {
     TimeStamp ts, qPrev;
-    String operations, frontEndIdentifier;
+    String[] operations;
+    String frontEndIdentifier;
     int replicaNumber;
 
-    UpdateLogRecord(int replicaNumber, TimeStamp ts, TimeStamp qPrev, String frontEndIdentifier, String operations) {
+    UpdateLogRecord(int replicaNumber, TimeStamp ts, TimeStamp qPrev, String frontEndIdentifier, String[] operations) {
         this.ts = ts;
         this.replicaNumber = replicaNumber;
         this.qPrev = qPrev;

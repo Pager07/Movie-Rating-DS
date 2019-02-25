@@ -14,18 +14,18 @@ public class UserRatingManager {
 //  To Add To Linked List: Iterate through the LinkedList till you find that the current movieID you are trying to add
 //                          is less than the current movie ID. If the movieID is the same then the user must be editting
 //                           old ID. Else add it to the back of the linked list.
-    public void addRating(int movieID, float rating, int timeStamp) {
+    public void addRating(String movieName, int movieID, float rating) {
         for (int i = 0; i < ratings.size(); i++) {
 //            Update Review Condition
             if (ratings.get(i).movieID == movieID) {
-                ratings.set(i, new UserRatings(movieID, rating, timeStamp));
+                ratings.set(i, new UserRatings(movieName, movieID, rating));
                 return;
             } else if (ratings.get(i).movieID < movieID) {
-                ratings.add(i, new UserRatings(movieID, rating, timeStamp));
+                ratings.add(i, new UserRatings(movieName, movieID, rating));
                 return;
             }
         }
-        ratings.addLast(new UserRatings(movieID, rating, timeStamp));
+        ratings.addLast(new UserRatings(movieName, movieID, rating));
     }
 
 //    Iterate through Linked list till you find the same movieID in the list then return.
@@ -57,18 +57,19 @@ public class UserRatingManager {
     }
 
     private class UserRatings {
-        private int timeStamp, movieID;
+        private String movieName;
+        private int movieID;
         private float rating;
 
-        private UserRatings(int movieID, float rating, int timeStamp) {
-            this.timeStamp = timeStamp;
+        private UserRatings(String movieName, int movieID,  float rating) {
+            this.movieName = movieName;
             this.movieID = movieID;
             this.rating = rating;
         }
 
         @Override
         public String toString() {
-            return userID + "," + movieID + "," + rating + "," + timeStamp;
+            return movieName + ": " + rating;
         }
     }
 }

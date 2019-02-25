@@ -18,8 +18,21 @@ public class MovieDatabase {
         fillRating();
     }
 
-//    Returns a String In The Form: Movie (Rating) Genres
-    public String queryDatabase(String movieName) {
+    public int createNewUser() {
+        return userRatings.size();
+    }
+
+//    Purpose: main method that Server calls to query database
+    public String queryDatabase(String[] queryOperations) {
+        if (queryOperations.length == 2) {
+            return getUserRatings(Integer.parseInt(queryOperations[0]));
+        }
+        return findMovie(queryOperations[0]);
+
+    }
+
+//    Purpose: Find All Information of Specific Movie
+    private String findMovie(String movieName){
         if (!movieIDs.containsKey(movieName)) return "Movie Not Found";
         int movieID = movieIDs.get(movieName);
         StringBuilder builder = new StringBuilder();
@@ -33,13 +46,20 @@ public class MovieDatabase {
         return builder.toString();
     }
 
+//    Purpose: get all ratings that was sent in by the user
+    private String getUserRatings(int userID) {
+        if (!userRatings.containsKey(userID)) return "User Contains No Reviews";
+        return userRatings.get(userID).toString();
+    }
+
+
+// TODO: 24/02/2019 On Shutdown, get servers to gossip
     public void shutDownServer() {
         saveDatabase();
         saveRatings();
     }
 
 //    When Servers Close Down and To Save State of Machine
-// TODO: 24/02/2019 On Shutdown, get servers to gossip
     private void saveDatabase() {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(getFile("movies")));
@@ -78,8 +98,19 @@ public class MovieDatabase {
         }
     }
 
-    public void addUserRating(int userID, int movieID, float rating, int timeStamp) {
-        userRatings.get(userID).addRating(movieID, rating, timeStamp);
+//    Adding to Database Methods
+//    Purpose: Generate uniqueID that doesn't exist in the database
+    public int generateUniqueUserID(){
+        return userRatings.size();
+    }
+
+
+    public void addMovie(String movieName, String genres) {
+
+    }
+
+    public void addUserRating(int userID, int movieID, float rating) {
+        userRatings.get(userID).addRating(movieDatabase.get(movieID).movieName, movieID, rating);
     }
 
     public void deleteUserRating(int userID, int movieID) {
@@ -137,7 +168,7 @@ public class MovieDatabase {
                 if (userRatings.get(userID) == null) {
                     userRatings.put(userID, new UserRatingManager(userID));
                 }
-                userRatings.get(userID).addRating(movieID, rating, time);
+                userRatings.get(userID).addRating(movieDatabase.get(movieID).movieName, movieID, rating);
 //                Put Movie Rating if Absent
                 movieRating.putIfAbsent(movieID, new MovieRating(0));
 //                Increment Movie Rating
@@ -205,5 +236,7 @@ public class MovieDatabase {
             return sum / ratings;
         }
     }
+
+
 
 }

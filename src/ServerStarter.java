@@ -15,12 +15,10 @@ public class ServerStarter {
                 Registry registry = LocateRegistry.getRegistry("localhost", 8000);
                 // Bind the remote object's stub in the registry
                 registry.bind("Server" + i, stub);
-
-                // Write ready message to console
             }
             System.out.println("Servers 0 - " + (PublicInformation.numServers - 1) + " ready");
         } catch (Exception e) {
-            System.err.println("Server exception: " + e.toString());
+            System.out.println("Server exception: " + e.toString());
             e.printStackTrace();
         }
         System.out.println("---------------------\n\n");
