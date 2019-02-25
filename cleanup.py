@@ -9,6 +9,13 @@ oldToNew = dict()
 count = 1
 
 for line in readMovies:
-    data = line.split()
+    data = line.split(",")
+    oldToNew[int(data[0])] = count
+    movies.write(str(count) + "," + data[1] + "," + data[2] + "\n")
+    count += 1
+movies.close()
 
-
+for line in readRatings:
+    data = line.split(",")
+    ratings.write(data[0] + "," + str(oldToNew[int(data[1])]) + "," + data[2] + "\n")
+ratings.close()
